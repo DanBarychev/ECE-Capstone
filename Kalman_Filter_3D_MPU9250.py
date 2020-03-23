@@ -38,8 +38,6 @@ Q = G*G.T*sa**2
 
 I = np.eye(n)
 
-m = 100 # Measurements
-
 # Acceleration
 sa= 0.1 # Sigma for acceleration
 ax= 0.0 # in X
@@ -53,10 +51,19 @@ mz = np.array(az+sa*np.random.randn(m))
 measurements = np.vstack((mx,my,mz))
 
 
+file = open('IMUCapture2.txt', 'r') # IMU data file
+Lines = file.readlines()
 
+for line in Lines:
+    data = line.split(",")
+    accel_x = data[0]
+    accel_y = data[1]
+    accel_z = data[2]
 
-for n in range(m):
-    
+    mx = np.array(ax+sa*accel_x)
+    my = np.array(ay+sa*accel_y)
+    mz = np.array(az+sa*accel_z)
+      
     # Time Update (Prediction)
     # ========================
     # Project the state ahead
@@ -72,7 +79,7 @@ for n in range(m):
     S = H*P*H.T + R
     K = (P*H.T) * np.linalg.pinv(S)
 
-	# Update the estimate via z
+  # Update the estimate via z
     Z = measurements[:,n].reshape(H.shape[0],1)
     y = Z - (H*x)                            # Innovation or Residual
     x = x + (K*y)
