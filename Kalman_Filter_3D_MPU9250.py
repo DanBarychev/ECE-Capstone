@@ -1,3 +1,5 @@
+import numpy as np
+
 x = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
 P = 100.0*np.eye(9)
@@ -36,7 +38,12 @@ G = np.matrix([[1/2.0*dt**2],
 
 Q = G*G.T*sa**2
 
-I = np.eye(n)
+I = np.eye(9)
+
+file = open('IMUCapture2.txt', 'r') # IMU data file
+Lines = file.readlines()
+
+m = len(Lines)
 
 # Acceleration
 sa= 0.1 # Sigma for acceleration
@@ -49,10 +56,6 @@ my = np.array(ay+sa*np.random.randn(m))
 mz = np.array(az+sa*np.random.randn(m))
 
 measurements = np.vstack((mx,my,mz))
-
-
-file = open('IMUCapture2.txt', 'r') # IMU data file
-Lines = file.readlines()
 
 for line in Lines:
     data = line.split(",")
@@ -79,7 +82,7 @@ for line in Lines:
     S = H*P*H.T + R
     K = (P*H.T) * np.linalg.pinv(S)
 
-  # Update the estimate via z
+  	# Update the estimate via z
     Z = measurements[:,n].reshape(H.shape[0],1)
     y = Z - (H*x)                            # Innovation or Residual
     x = x + (K*y)
