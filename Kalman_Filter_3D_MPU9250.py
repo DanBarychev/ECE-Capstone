@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 x = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
@@ -51,22 +53,49 @@ ax= 0.0 # in X
 ay= 0.0 # in Y
 az= 0.0 # in Z
 
-mx = np.array(ax+sa*np.random.randn(m))
-my = np.array(ay+sa*np.random.randn(m))
-mz = np.array(az+sa*np.random.randn(m))
-
-measurements = np.vstack((mx,my,mz))
+ax_values = np.array([])
+ay_values = np.array([])
+az_values = np.array([])
 
 for line in Lines:
     data = line.split(",")
-    accel_x = data[0]
-    accel_y = data[1]
-    accel_z = data[2]
+    accel_x = float(data[0])
+    accel_y = float(data[1])
+    accel_z = float(data[2])
 
-    mx = np.array(ax+sa*accel_x)
-    my = np.array(ay+sa*accel_y)
-    mz = np.array(az+sa*accel_z)
-      
+    ax_values = np.append(ax_values, accel_x)
+    ay_values = np.append(ay_values, accel_y)
+    az_values = np.append(az_values, accel_z)
+
+mx = np.array(ax+sa*ax_values)
+my = np.array(ay+sa*ay_values)
+mz = np.array(az+sa*az_values)
+
+measurements = np.vstack((mx,my,mz))
+
+# Preallocation for Plotting
+xt = []
+yt = []
+dxt= []
+dyt= []
+ddxt=[]
+ddyt=[]
+Zx = []
+Zy = []
+Px = []
+Py = []
+Pdx= []
+Pdy= []
+Pddx=[]
+Pddy=[]
+Kx = []
+Ky = []
+Kdx= []
+Kdy= []
+Kddx=[]
+Kddy=[]
+
+for n in range(m):      
     # Time Update (Prediction)
     # ========================
     # Project the state ahead
@@ -113,3 +142,19 @@ for line in Lines:
     Kdy.append(float(K[3,0]))
     Kddx.append(float(K[4,0]))
     Kddy.append(float(K[5,0]))
+
+
+
+fig = plt.figure(figsize=(16,4))
+#plt.plot(range(len(measurements[0])),Px, label='$x$')
+#plt.plot(range(len(measurements[0])),Py, label='$y$')
+plt.plot(range(len(measurements[0])),Pddx, label='$\ddot x$')
+plt.plot(range(len(measurements[0])),Pddy, label='$\ddot y$')
+
+plt.xlabel('Filter Step')
+plt.ylabel('')
+plt.title('Uncertainty (Elements from Matrix $P$)')
+plt.legend(loc='best',prop={'size':22})
+
+plt.show()
+
