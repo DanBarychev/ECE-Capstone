@@ -210,16 +210,64 @@ for n in range(m):
 
 
 
-fig = plt.figure(figsize=(16,4))
-#plt.plot(range(len(measurements[0])),Px, label='$x$')
-#plt.plot(range(len(measurements[0])),Py, label='$y$')
-plt.plot(range(len(measurements[0])),Pddx, label='$\ddot x$')
-plt.plot(range(len(measurements[0])),Pddy, label='$\ddot y$')
+# fig = plt.figure(figsize=(16,4))
+# #plt.plot(range(len(measurements[0])),Px, label='$x$')
+# #plt.plot(range(len(measurements[0])),Py, label='$y$')
+# plt.plot(range(len(measurements[0])),Pddx, label='$\ddot x$')
+# plt.plot(range(len(measurements[0])),Pddy, label='$\ddot y$')
+# plt.plot(range(len(measurements[0])),Pddz, label='$\ddot z$')
 
-plt.xlabel('Filter Step')
-plt.ylabel('')
-plt.title('Uncertainty (Elements from Matrix $P$)')
-plt.legend(loc='best',prop={'size':22})
+# plt.xlabel('Filter Step')
+# plt.ylabel('')
+# plt.title('Uncertainty (Elements from Matrix $P$)')
+# plt.legend(loc='best',prop={'size':22})
+
+# plt.show()
+
+# fig = plt.figure(figsize=(16,9))
+
+# plt.subplot(311)
+# plt.step(range(len(measurements[0])),ddxt, label='$\ddot x$')
+# plt.step(range(len(measurements[0])),ddyt, label='$\ddot y$')
+# plt.step(range(len(measurements[0])),ddzt, label='$\ddot z$')
+
+# plt.title('Estimate (Elements from State Vector $x$)')
+# plt.legend(loc='best',prop={'size':22})
+# plt.ylabel('Acceleration')
+# plt.ylim([-1,1])
+
+# plt.subplot(312)
+# plt.step(range(len(measurements[0])),dxt, label='$\dot x$')
+# plt.step(range(len(measurements[0])),dyt, label='$\dot y$')
+# plt.step(range(len(measurements[0])),dzt, label='$\dot z$')
+
+# plt.ylabel('')
+# plt.legend(loc='best',prop={'size':22})
+# plt.ylabel('Velocity')
+           
+# plt.subplot(313)
+# plt.step(range(len(measurements[0])),xt, label='$x$')
+# plt.step(range(len(measurements[0])),yt, label='$y$')
+# plt.step(range(len(measurements[0])),zt, label='$z$')
+
+# plt.xlabel('Filter Step')
+# plt.ylabel('')
+# plt.legend(loc='best',prop={'size':22})
+# plt.ylabel('Position')
+
+#plt.show()
+
+fig = plt.figure(figsize=(16,16))
+plt.scatter(xt[0],yt[0], s=100, label='Start', c='g')
+plt.scatter(xt[-1],yt[-1], s=100, label='Goal', c='r')
+plt.plot(xt,yt, label='State',alpha=0.5)
+
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Position')
+plt.legend(loc='best')
+plt.xlim([-100, 100])
+plt.ylim([-100, 100])
 
 plt.show()
 
