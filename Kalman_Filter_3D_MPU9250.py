@@ -3,12 +3,10 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 x = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
-#x = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
-P = 100.0*np.eye(9)
-#P = 10.0*np.eye(6)
+P = 1000.0*np.eye(9)
 
-dt = 0.5 # Time Step between Filter Steps
+dt = 0.02 # Time Step between Filter Steps
 A = np.matrix([[1.0, 0.0, 0.0, dt, 0.0, 0.0, 1/2.0*dt**2, 0.0, 0.0],
               [0.0, 1.0, 0.0, 0.0,  dt, 0.0, 0.0, 1/2.0*dt**2, 0.0],
               [0.0, 0.0, 1.0, 0.0, 0.0,  dt, 0.0, 0.0, 1/2.0*dt**2],
@@ -19,31 +17,17 @@ A = np.matrix([[1.0, 0.0, 0.0, dt, 0.0, 0.0, 1/2.0*dt**2, 0.0, 0.0],
               [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
               [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
 
-#dt = 0.5
-# A = np.matrix([[1.0, 0.0, dt, 0.0, 1/2.0*dt**2, 0.0],
-#               [0.0, 1.0, 0.0, dt, 0.0, 1/2.0*dt**2],
-#               [0.0, 0.0, 1.0, 0.0, dt, 0.0],
-#               [0.0, 0.0, 0.0, 1.0, 0.0, dt],
-#               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-#               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
-
 # Measure x'', y'', z''
 H = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
 
-# H = np.matrix([[0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-#               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
-
-ra = 10.0**2
+ra = .0000001**2
 R = np.matrix([[ra, 0.0, 0.0],
                [0.0, ra, 0.0],
                [0.0, 0.0, ra]])
 
-# R = np.matrix([[ra, 0.0],
-#                [0.0, ra]])
-
-sa = 0.1
+sa = .5
 G = np.matrix([[1/2.0*dt**2],
                [1/2.0*dt**2],
                [1/2.0*dt**2],
@@ -54,18 +38,11 @@ G = np.matrix([[1/2.0*dt**2],
                [1.0],
                [1.0]])
 
-# G = np.matrix([[1/2.0*dt**2],
-#                [1/2.0*dt**2],
-#                [dt],
-#                [dt],
-#                [1.0],
-#                [1.0]])
-
 Q = G*G.T*sa**2
 
 I = np.eye(9)
 
-file = open('IMUCapture_NoGrav1.txt', 'r') # IMU data file
+file = open('IMUCapture_Line1.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
@@ -80,22 +57,30 @@ ax_values = np.array([])
 ay_values = np.array([])
 az_values = np.array([])
 
-for line in Lines:
+ax_calib_sum = 0
+ay_calib_sum = 0
+az_calib_sum = 0
+
+#The first 300 samples is the first 6 seconds under 50Hz
+for a in range(300):
+    line = Lines[a]
     data = line.split(",")
     accel_x = float(data[0])
     accel_y = float(data[1])
     accel_z = float(data[2])
 
-    ax_values = np.append(ax_values, accel_x)
-    ay_values = np.append(ay_values, accel_y)
-    az_values = np.append(az_values, accel_z)
+    ax_calib_sum += accel_x
+    ay_calib_sum += accel_y
+    az_calib_sum += accel_z
 
-mx = np.array(ax+sa*ax_values)
-my = np.array(ay+sa*ay_values)
-mz = np.array(az+sa*az_values)
+ax_calib = ax_calib_sum / 300
+ay_calib = ay_calib_sum / 300
+az_calib = az_calib_sum / 300
 
-measurements = np.vstack((mx,my,mz))
-
+print("Average Estimates")
+print(ax_calib)
+print(ay_calib)
+print(az_calib)
 
 # Preallocation for Plotting
 xt = []
@@ -129,6 +114,29 @@ Kddx = []
 Kddy = []
 Kddz = []
 
+for line in Lines:
+    data = line.split(",")
+    accel_x = float(data[0])  
+    accel_x = accel_x - ax_calib
+
+    accel_y = float(data[1])
+    accel_y = accel_y - ay_calib
+    
+    accel_z = float(data[2])
+    accel_z = accel_z - az_calib
+
+    accel_z = 0;
+
+    ax_values = np.append(ax_values, accel_x)
+    ay_values = np.append(ay_values, accel_y)
+    az_values = np.append(az_values, accel_z)
+
+mx = np.array(ax+sa*ax_values)
+my = np.array(ay+sa*ay_values)
+mz = np.array(az+sa*az_values)
+
+measurements = np.vstack((mx,my,mz))
+
 for n in range(m):      
     # Time Update (Prediction)
     # ========================
@@ -145,7 +153,7 @@ for n in range(m):
     S = H*P*H.T + R
     K = (P*H.T) * np.linalg.pinv(S)
 
-  	# Update the estimate via z
+    # Update the estimate via z
     Z = measurements[:,n].reshape(H.shape[0],1)
     y = Z - (H*x)                            # Innovation or Residual
     x = x + (K*y)
@@ -153,30 +161,26 @@ for n in range(m):
     # Update the error covariance
     P = (I - (K*H))*P
 
+    if (n == 1000):
+      print("\nData at 1000\n")
+      print(x[6])
+      print(x[7])
+      print(x[8])
+
+    if (n == 1500):
+      print("\nData at 1500\n")
+      print(x[6])
+      print(x[7])
+      print(x[8])
+
+    # if (n == 2000):
+    #   print("\nData at 2000\n")
+    #   print(x[6])
+    #   print(x[7])
+    #   print(x[8])
    
     
     # Save states for Plotting
-    # xt.append(float(x[0]))
-    # yt.append(float(x[1]))
-    # dxt.append(float(x[2]))
-    # dyt.append(float(x[3]))
-    # ddxt.append(float(x[4]))
-    # ddyt.append(float(x[5]))
-    # Zx.append(float(Z[0]))
-    # Zy.append(float(Z[1]))
-    # Px.append(float(P[0,0]))
-    # Py.append(float(P[1,1]))
-    # Pdx.append(float(P[2,2]))
-    # Pdy.append(float(P[3,3]))
-    # Pddx.append(float(P[4,4]))
-    # Pddy.append(float(P[5,5]))
-    # Kx.append(float(K[0,0]))
-    # Ky.append(float(K[1,0]))
-    # Kdx.append(float(K[2,0]))
-    # Kdy.append(float(K[3,0]))
-    # Kddx.append(float(K[4,0]))
-    # Kddy.append(float(K[5,0]))
-
     xt.append(float(x[0]))
     yt.append(float(x[1]))
     zt.append(float(x[2]))
@@ -206,7 +210,7 @@ for n in range(m):
     Kdz.append(float(K[5,0]))
     Kddx.append(float(K[6,0]))
     Kddy.append(float(K[7,0]))
-    Kddz.append(float(K[7,0]))
+    Kddz.append(float(K[8,0]))
 
 
 
@@ -224,38 +228,38 @@ for n in range(m):
 
 # plt.show()
 
-# fig = plt.figure(figsize=(16,9))
+fig = plt.figure(figsize=(16,9))
 
-# plt.subplot(311)
-# plt.step(range(len(measurements[0])),ddxt, label='$\ddot x$')
-# plt.step(range(len(measurements[0])),ddyt, label='$\ddot y$')
-# plt.step(range(len(measurements[0])),ddzt, label='$\ddot z$')
+plt.subplot(311)
+plt.step(range(len(measurements[0])),ddxt, label='$\ddot x$')
+plt.step(range(len(measurements[0])),ddyt, label='$\ddot y$')
+plt.step(range(len(measurements[0])),ddzt, label='$\ddot z$')
 
-# plt.title('Estimate (Elements from State Vector $x$)')
-# plt.legend(loc='best',prop={'size':22})
-# plt.ylabel('Acceleration')
-# plt.ylim([-1,1])
+plt.title('Estimate (Elements from State Vector $x$)')
+plt.legend(loc='best',prop={'size':22})
+plt.ylabel('Acceleration')
+plt.ylim([-1,1])
 
-# plt.subplot(312)
-# plt.step(range(len(measurements[0])),dxt, label='$\dot x$')
-# plt.step(range(len(measurements[0])),dyt, label='$\dot y$')
-# plt.step(range(len(measurements[0])),dzt, label='$\dot z$')
+plt.subplot(312)
+plt.step(range(len(measurements[0])),dxt, label='$\dot x$')
+plt.step(range(len(measurements[0])),dyt, label='$\dot y$')
+plt.step(range(len(measurements[0])),dzt, label='$\dot z$')
 
-# plt.ylabel('')
-# plt.legend(loc='best',prop={'size':22})
-# plt.ylabel('Velocity')
+plt.ylabel('')
+plt.legend(loc='best',prop={'size':22})
+plt.ylabel('Velocity')
            
-# plt.subplot(313)
-# plt.step(range(len(measurements[0])),xt, label='$x$')
-# plt.step(range(len(measurements[0])),yt, label='$y$')
-# plt.step(range(len(measurements[0])),zt, label='$z$')
+plt.subplot(313)
+plt.step(range(len(measurements[0])),xt, label='$x$')
+plt.step(range(len(measurements[0])),yt, label='$y$')
+plt.step(range(len(measurements[0])),zt, label='$z$')
 
-# plt.xlabel('Filter Step')
-# plt.ylabel('')
-# plt.legend(loc='best',prop={'size':22})
-# plt.ylabel('Position')
+plt.xlabel('Filter Step')
+plt.ylabel('')
+plt.legend(loc='best',prop={'size':22})
+plt.ylabel('Position')
 
-#plt.show()
+plt.show()
 
 fig = plt.figure(figsize=(16,16))
 plt.scatter(xt[0],yt[0], s=100, label='Start', c='g')
