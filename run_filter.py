@@ -1,12 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from madgwickahrs import MadgwickAHRS
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.spatial.transform import Rotation
 from scipy.stats import norm
 from scipy import signal
 
-dt = 0.02 # Time Step between Filter Steps
+dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_Line1.txt', 'r') # IMU data file
+file = open('IMUCapture_ArmSwing2.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
@@ -74,66 +76,81 @@ for line in Lines:
     #accel_z = accel_z - az_calib
     accel_z = 0;
 
-    # gyro_x = float(data[3])
-    # gyro_y = float(data[4])
-    # gyro_z = float(data[5])
+    gyro_x = float(data[3])
+    gyro_y = float(data[4])
+    gyro_z = float(data[5])
     
     ax_values = np.append(ax_values, accel_x)
     ay_values = np.append(ay_values, accel_y)
     az_values = np.append(az_values, accel_z)
 
-    # gx_values = np.append(ax_values, accel_x)
-    # gy_values = np.append(ay_values, accel_y)
-    # gz_values = np.append(az_values, accel_z)
+    gx_values = np.append(ax_values, accel_x)
+    gy_values = np.append(ay_values, accel_y)
+    gz_values = np.append(az_values, accel_z)
+
+a_values = np.vstack((ax_values, ay_values, az_values))
+g_values = np.vstack((gx_values, gy_values, gz_values))
+
+# Use the Madgwick AHRS filter
+
+ahrs = MadgwickAHRS()
+R = np.zeros((m,3,3))
+
+for i in range(m):
+	ahrs.update_imu(g_values[:, i], a_values[:, i])
+	R[i,:,:] = Rotation.from_quat(ahrs.quaternion._q).as_matrix()
+
+# Compute the tilt compensated acceleration and subtract gravity
+
+tc_a_values = np.zeros((3,m))
+
+for i in range(m):
+	tc_a_values[:,i] = np.dot(R[i,:,:], a_values[:,i])
+
+a_values_final = tc_a_values - np.vstack((np.zeros(m), np.zeros(m), np.ones(m) * 9.81))
 
 # Integrate acceleration to get velocity, then high pass filter
 
-vx_values = np.array([0.0] * len(Lines))
-vy_values = np.array([0.0] * len(Lines))
-vz_values = np.array([0.0] * len(Lines))
+v_values = np.zeros((3,m))
 
 for i in range(2, len(Lines)):
-	vx_values[i] = vx_values[i-1] + ax_values[i] * dt
-	vy_values[i] = vy_values[i-1] + ay_values[i] * dt
-	vz_values[i] = vz_values[i-1] + az_values[i] * dt
+	v_values[:,i] = v_values[:,i-1] + (a_values_final[:,i] * dt)
 
 order = 1;
 filtCutOff = 0.1;
 b, a = signal.butter(order, (2*filtCutOff)/(1/dt), 'high')
 
-vx_hp = signal.filtfilt(b, a, vx_values)
-vy_hp = signal.filtfilt(b, a, vy_values)
-vz_hp = signal.filtfilt(b, a, vz_values)
+vx_hp = signal.filtfilt(b, a, v_values[0,:])
+vy_hp = signal.filtfilt(b, a, v_values[1,:])
+vz_hp = signal.filtfilt(b, a, v_values[2,:])
 
 # Integrate velocity to get position, then high pass filter
 
-px_values = np.array([0.0] * len(Lines))
-py_values = np.array([0.0] * len(Lines))
-pz_values = np.array([0.0] * len(Lines))
+p_values = np.zeros((3,m))
 
 for i in range(2, len(Lines)):
-	px_values[i] = px_values[i-1] + vx_values[i] * dt
-	py_values[i] = py_values[i-1] + vy_values[i] * dt
-	pz_values[i] = pz_values[i-1] + vz_values[i] * dt
+	p_values[0,i] = p_values[0,i-1] + (vx_hp[i] * dt)
+	p_values[1,i] = p_values[1,i-1] + (vy_hp[i] * dt)
+	p_values[2,i] = p_values[2,i-1] + (vz_hp[i] * dt)
 
 order = 1;
 filtCutOff = 0.1;
 b, a = signal.butter(order, (2*filtCutOff)/(1/dt), 'high')
 
-px_hp = signal.filtfilt(b, a, px_values)
-py_hp = signal.filtfilt(b, a, py_values)
-pz_hp = signal.filtfilt(b, a, pz_values)
+px_hp = signal.filtfilt(b, a, p_values[0,:])
+py_hp = signal.filtfilt(b, a, p_values[1,:])
+pz_hp = signal.filtfilt(b, a, p_values[2,:])
 
 # Allocation for Plotting
-xt = px_hp;
-yt = py_hp;
-zt = pz_hp;
-dxt = vx_hp;
-dyt = vy_hp;
-dzt = vz_hp;
-ddxt = ax_values;
-ddyt = ay_values;
-ddzt = az_values;
+xt = px_hp
+yt = py_hp
+zt = pz_hp
+dxt = vx_hp
+dyt = vy_hp
+dzt = vz_hp
+ddxt = a_values_final[0,:]
+ddyt = a_values_final[1,:]
+ddzt = a_values_final[2,:]
 
 #Plotting
 

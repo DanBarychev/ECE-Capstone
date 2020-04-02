@@ -19,11 +19,11 @@
 import warnings
 import numpy as np
 from numpy.linalg import norm
-from .quaternion import Quaternion
+from quaternion import Quaternion
 
 
 class MadgwickAHRS:
-    samplePeriod = 1/256
+    samplePeriod = 1/50
     quaternion = Quaternion(1, 0, 0, 0)
     beta = 1
 
