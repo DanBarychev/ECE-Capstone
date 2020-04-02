@@ -4,7 +4,7 @@ from scipy.stats import norm
 
 x = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
-P = 1000.0*np.eye(9)
+P = 100*np.eye(9)
 
 dt = 0.02 # Time Step between Filter Steps
 A = np.matrix([[1.0, 0.0, 0.0, dt, 0.0, 0.0, 1/2.0*dt**2, 0.0, 0.0],
@@ -22,12 +22,12 @@ H = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
 
-ra = .0000001**2
+ra = 10**2
 R = np.matrix([[ra, 0.0, 0.0],
                [0.0, ra, 0.0],
                [0.0, 0.0, ra]])
 
-sa = .5
+sa = .1
 G = np.matrix([[1/2.0*dt**2],
                [1/2.0*dt**2],
                [1/2.0*dt**2],
@@ -42,13 +42,13 @@ Q = G*G.T*sa**2
 
 I = np.eye(9)
 
-file = open('IMUCapture_Line1.txt', 'r') # IMU data file
+file = open('IMUCapture_Circle1.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
 
 # Acceleration
-sa= 0.1 # Sigma for acceleration
+sa= .1 # Sigma for acceleration
 ax= 0.0 # in X
 ay= 0.0 # in Y
 az= 0.0 # in Z
@@ -161,17 +161,17 @@ for n in range(m):
     # Update the error covariance
     P = (I - (K*H))*P
 
-    if (n == 1000):
-      print("\nData at 1000\n")
-      print(x[6])
-      print(x[7])
-      print(x[8])
+    # if (n == 1000):
+    #   print("\nData at 1000\n")
+    #   print(x[6])
+    #   print(x[7])
+    #   print(x[8])
 
-    if (n == 1500):
-      print("\nData at 1500\n")
-      print(x[6])
-      print(x[7])
-      print(x[8])
+    # if (n == 1500):
+    #   print("\nData at 1500\n")
+    #   print(x[6])
+    #   print(x[7])
+    #   print(x[8])
 
     # if (n == 2000):
     #   print("\nData at 2000\n")
