@@ -8,7 +8,7 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_Pendulum3.txt', 'r') # IMU data file
+file = open('IMUCapture_Pendulum1.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
@@ -74,7 +74,7 @@ for line in Lines:
     
     accel_z = float(data[2])
     #accel_z = accel_z - az_calib
-    accel_z = 0;
+    #accel_z = 0;
 
     gyro_x = float(data[3])
     gyro_y = float(data[4])
@@ -117,7 +117,7 @@ for i in range(2, len(Lines)):
 	v_values[:,i] = v_values[:,i-1] + (a_values_final[:,i] * dt)
 
 order = 1;
-filtCutOff = 0.1;
+filtCutOff = .5;
 b, a = signal.butter(order, (2*filtCutOff)/(1/dt), 'high')
 
 vx_hp = signal.filtfilt(b, a, v_values[0,:])
@@ -134,7 +134,7 @@ for i in range(2, len(Lines)):
 	p_values[2,i] = p_values[2,i-1] + (vz_hp[i] * dt)
 
 order = 1;
-filtCutOff = 0.1;
+filtCutOff = .5
 b, a = signal.butter(order, (2*filtCutOff)/(1/dt), 'high')
 
 px_hp = signal.filtfilt(b, a, p_values[0,:])
