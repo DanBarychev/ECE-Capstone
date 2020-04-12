@@ -33,13 +33,12 @@ S20A is 3.3V voltage regulator MIC5205-3.3BM5
 */
 
 #include "MPU9250.h"
-#include <MadgwickAHRS.h>
-
-Madgwick filter;
 
 // an MPU9250 object with the MPU-9250 sensor on I2C bus 0 with address 0x68
 MPU9250 IMU(Wire,0x68);
 int status;
+
+double dataVal = 0;
 
 void setup() {
   // serial to display data
@@ -64,80 +63,36 @@ void setup() {
   IMU.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_20HZ); */
   // setting SRD to 19 for a 50 Hz update rate
   IMU.setSrd(19);
+
+  Particle.variable("AccelX", dataVal);
 }
 
 void loop() {
   // read the sensor
   IMU.readSensor();
+
+  double ax = IMU.getAccelX_mss();
+  double ay = IMU.getAccelY_mss();
+  double az = IMU.getAccelZ_mss();
+
+  double gx = IMU.getGyroX_rads();
+  double gy = IMU.getGyroY_rads();
+  double gz = IMU.getGyroZ_rads();
+  
   // display the data
-
-  float ax, ay, az;
-  float gx, gy, gz;
-  float roll, pitch, heading;
-  
-  /*Serial.print("AccelX: ");
-  Serial.print(IMU.getAccelX_mss(),6);
-  Serial.print("  ");
-  Serial.print("AccelY: ");  
-  Serial.print(IMU.getAccelY_mss(),6);
-  Serial.print("  ");
-  Serial.print("AccelZ: ");  
-  Serial.println(IMU.getAccelZ_mss(),6);
-  
-  Serial.print("GyroX: ");
-  Serial.print(IMU.getGyroX_rads(),6);
-  Serial.print("  ");
-  Serial.print("GyroY: ");  
-  Serial.print(IMU.getGyroY_rads(),6);
-  Serial.print("  ");
-  Serial.print("GyroZ: ");  
-  Serial.println(IMU.getGyroZ_rads(),6);
-
-  Serial.print("MagX: ");  
-  Serial.print(IMU.getMagX_uT(),6);
-  Serial.print("  ");  
-  Serial.print("MagY: ");
-  Serial.print(IMU.getMagY_uT(),6);
-  Serial.print("  ");
-  Serial.print("MagZ: ");  
-  Serial.println(IMU.getMagZ_uT(),6);
-   */
-
-  Serial.print(IMU.getAccelX_mss(),6);
+  Serial.print(ax,6);
   Serial.print(",");
-  Serial.print(IMU.getAccelY_mss(),6);
+  Serial.print(ay,6);
   Serial.print(",");
-  Serial.print(IMU.getAccelZ_mss(),6);
+  Serial.print(az,6);
   Serial.print(",");
-  Serial.print(IMU.getGyroX_rads(),6);
+  Serial.print(gx,6);
   Serial.print(",");
-  Serial.print(IMU.getGyroY_rads(),6);
+  Serial.print(gy,6);
   Serial.print(",");
-  Serial.println(IMU.getGyroZ_rads(),6);
+  Serial.println(gz,6);
 
-
-//  ax = IMU.getAccelX_mss();
-//  ay = IMU.getAccelY_mss();
-//  az = IMU.getAccelZ_mss();
-//  gx = IMU.getGyroX_rads();
-//  gy = IMU.getGyroY_rads();
-//  gz = IMU.getGyroZ_rads();
-//
-//  // update the filter, which computes orientation
-//  filter.updateIMU(gx, gy, gz, ax, ay, az);
-//
-//  // print the heading, pitch and roll
-//  roll = filter.getRoll();
-//  pitch = filter.getPitch();
-//  heading = filter.getYaw();
-//  Serial.print("Orientation: ");
-//  Serial.print(heading);
-//  Serial.print(" ");
-//  Serial.print(pitch);
-//  Serial.print(" ");
-//  Serial.println(roll);
-
-  
+  dataVal = ax;
   
   delay(20);
 } 

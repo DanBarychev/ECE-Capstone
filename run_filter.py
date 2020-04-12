@@ -8,7 +8,7 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_ArmSwing2.txt', 'r') # IMU data file
+file = open('IMUCapture_Pendulum1.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
