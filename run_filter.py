@@ -8,7 +8,7 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_Demo2.txt', 'r') # IMU data file
+file = open('IMUCapture_ThrowNormal.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
@@ -70,31 +70,39 @@ for line in Lines:
 
     throwState = int(data[0])
 
-    timestamp = int(data[1])
+    timestamp = float(data[1])
 
     accel_x = float(data[2])  
-    #accel_x = accel_x - ax_clib
 
     accel_y = float(data[3])
-    #accel_y = accel_y - ay_calib
     
     accel_z = float(data[4])
-    #accel_z = accel_z - az_calib
-    #accel_z = 0;
 
     # !!! Flip x and y to use Pendulum1.txt
 
     gyro_x = float(data[5])
     gyro_y = float(data[6])
     gyro_z = float(data[7])
+
+    # accel_x = float(data[0])  
+
+    # accel_y = float(data[1])
+    
+    # accel_z = float(data[2])
+
+    # # !!! Flip x and y to use Pendulum1.txt
+
+    # gyro_x = float(data[3])
+    # gyro_y = float(data[4])
+    # gyro_z = float(data[5])
     
     ax_values = np.append(ax_values, accel_x)
     ay_values = np.append(ay_values, accel_y)
     az_values = np.append(az_values, accel_z)
 
-    gx_values = np.append(ax_values, accel_x)
-    gy_values = np.append(ay_values, accel_y)
-    gz_values = np.append(az_values, accel_z)
+    gx_values = np.append(gx_values, gyro_x)
+    gy_values = np.append(gy_values, gyro_y)
+    gz_values = np.append(gz_values, gyro_z)
 
 a_values = np.vstack((ax_values, ay_values, az_values))
 g_values = np.vstack((gx_values, gy_values, gz_values))
