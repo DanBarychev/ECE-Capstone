@@ -8,19 +8,24 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_Demo2.txt', 'r') # IMU data file
+file = open('IMUCapture_ThrowNormal.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
 
-ax_values = np.array([])
-ay_values = np.array([])
-az_values = np.array([])
+throw_states = np.array([]) 
+time_stamps = np.array([])
 
-gx_values = np.array([])
-gy_values = np.array([])
-gz_values = np.array([])
+ax_values_h = np.array([]) # h for hand IMU
+ay_values_h = np.array([])
+az_values_h = np.array([])
 
+gx_values_h = np.array([])
+gy_values_h = np.array([])
+gz_values_h = np.array([])
+
+
+"""
 ax_calib_sum = 0
 ay_calib_sum = 0
 az_calib_sum = 0
@@ -28,6 +33,7 @@ az_calib_sum = 0
 gx_calib_sum = 0
 gy_calib_sum = 0
 gz_calib_sum = 0
+"""
 
 #The first 100 samples is the first 2 seconds under 50Hz
 
@@ -68,36 +74,44 @@ gz_calib_sum = 0
 for line in Lines:
     data = line.split(",")
 
-    throwState = int(data[0])
+    throw_state = int(data[0])
 
-    timestamp = int(data[1])
+    time_stamp = float(data[1])
 
-    accel_x = float(data[2])  
+    accel_x_h = float(data[2])  
     #accel_x = accel_x - ax_clib
 
-    accel_y = float(data[3])
+    accel_y_h = float(data[3])
     #accel_y = accel_y - ay_calib
     
-    accel_z = float(data[4])
+    accel_z_h = float(data[4])
     #accel_z = accel_z - az_calib
     #accel_z = 0;
 
     # !!! Flip x and y to use Pendulum1.txt
 
-    gyro_x = float(data[5])
-    gyro_y = float(data[6])
-    gyro_z = float(data[7])
+    gyro_x_h = float(data[5])
+    gyro_y_h = float(data[6])
+    gyro_z_h = float(data[7])
+
+
+    throw_states = np.append(throw_states, throw_state)
+    time_stamps = np.append(time_stamps, time_stamp)
     
-    ax_values = np.append(ax_values, accel_x)
-    ay_values = np.append(ay_values, accel_y)
-    az_values = np.append(az_values, accel_z)
+    ax_values_h = np.append(ax_values_h, accel_x_h)
+    ay_values_h = np.append(ay_values_h, accel_y_h)
+    az_values_h = np.append(az_values_h, accel_z_h)
 
-    gx_values = np.append(ax_values, accel_x)
-    gy_values = np.append(ay_values, accel_y)
-    gz_values = np.append(az_values, accel_z)
+    gx_values_h = np.append(gx_values_h, gyro_x_h)
+    gy_values_h = np.append(gy_values_h, gyro_y_h)
+    gz_values_h = np.append(gz_values_h, gyro_z_h)
 
-a_values = np.vstack((ax_values, ay_values, az_values))
-g_values = np.vstack((gx_values, gy_values, gz_values))
+    #gy_values_f = np.append(gy_values_f, gyro_y_f)
+
+
+
+a_values = np.vstack((ax_values_h, ay_values_h, az_values_h))
+g_values = np.vstack((gx_values_h, gy_values_h, gz_values_h))
 
 # Use the Madgwick AHRS filter
 
@@ -105,15 +119,15 @@ ahrs = MadgwickAHRS()
 R = np.zeros((m,3,3))
 
 for i in range(m):
-	ahrs.update_imu(g_values[:, i], a_values[:, i])
-	R[i,:,:] = Rotation.from_quat(ahrs.quaternion._q).as_matrix()
+    ahrs.update_imu(g_values[:, i], a_values[:, i])
+    R[i,:,:] = Rotation.from_quat(ahrs.quaternion._q).as_matrix()
 
 # Compute the tilt compensated acceleration and subtract gravity
 
 tc_a_values = np.zeros((3,m))
 
 for i in range(m):
-	tc_a_values[:,i] = np.dot(R[i,:,:], a_values[:,i])
+    tc_a_values[:,i] = np.dot(R[i,:,:], a_values[:,i])
 
 a_values_final = tc_a_values - np.vstack((np.zeros(m), np.zeros(m), np.ones(m) * 9.81))
 
@@ -122,7 +136,7 @@ a_values_final = tc_a_values - np.vstack((np.zeros(m), np.zeros(m), np.ones(m) *
 v_values = np.zeros((3,m))
 
 for i in range(2, len(Lines)):
-	v_values[:,i] = v_values[:,i-1] + (a_values_final[:,i] * dt)
+    v_values[:,i] = v_values[:,i-1] + (a_values_final[:,i] * dt)
 
 order = 1;
 filtCutOff = .5;
@@ -137,9 +151,9 @@ vz_hp = signal.filtfilt(b, a, v_values[2,:])
 p_values = np.zeros((3,m))
 
 for i in range(2, len(Lines)):
-	p_values[0,i] = p_values[0,i-1] + (vx_hp[i] * dt)
-	p_values[1,i] = p_values[1,i-1] + (vy_hp[i] * dt)
-	p_values[2,i] = p_values[2,i-1] + (vz_hp[i] * dt)
+    p_values[0,i] = p_values[0,i-1] + (vx_hp[i] * dt)
+    p_values[1,i] = p_values[1,i-1] + (vy_hp[i] * dt)
+    p_values[2,i] = p_values[2,i-1] + (vz_hp[i] * dt)
 
 order = 1;
 filtCutOff = .5
