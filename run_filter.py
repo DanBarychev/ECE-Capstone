@@ -8,7 +8,7 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_Pendulum1.txt', 'r') # IMU data file
+file = open('IMUCapture_Demo2.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
@@ -30,38 +30,39 @@ gy_calib_sum = 0
 gz_calib_sum = 0
 
 #The first 100 samples is the first 2 seconds under 50Hz
-for a in range(100):
-    line = Lines[a]
-    data = line.split(",")
-    accel_x = float(data[0])
-    accel_y = float(data[1])
-    accel_z = float(data[2])
 
-    # gyro_x = float(data[3])
-    # gyro_y = float(data[4])
-    # gyro_z = float(data[5])
+# for a in range(100):
+#     line = Lines[a]
+#     data = line.split(",")
+#     accel_x = float(data[0])
+#     accel_y = float(data[1])
+#     accel_z = float(data[2])
 
-    ax_calib_sum += accel_x
-    ay_calib_sum += accel_y
-    az_calib_sum += accel_z
+#     # gyro_x = float(data[3])
+#     # gyro_y = float(data[4])
+#     # gyro_z = float(data[5])
 
-    # gx_calib_sum += gyro_x
-    # gy_calib_sum += gyro_y
-    # gz_calib_sum += gyro_z
+#     ax_calib_sum += accel_x
+#     ay_calib_sum += accel_y
+#     az_calib_sum += accel_z
+
+#     # gx_calib_sum += gyro_x
+#     # gy_calib_sum += gyro_y
+#     # gz_calib_sum += gyro_z
 
 
-ax_calib = ax_calib_sum / 100
-ay_calib = ay_calib_sum / 100
-az_calib = az_calib_sum / 100
+# ax_calib = ax_calib_sum / 100
+# ay_calib = ay_calib_sum / 100
+# az_calib = az_calib_sum / 100
 
-gx_calib = gx_calib_sum / 100
-gy_calib = gy_calib_sum / 100
-gz_calib = gz_calib_sum / 100
+# gx_calib = gx_calib_sum / 100
+# gy_calib = gy_calib_sum / 100
+# gz_calib = gz_calib_sum / 100
 
-print("Average Estimates")
-print(ax_calib)
-print(ay_calib)
-print(az_calib)
+# print("Average Estimates")
+# print(ax_calib)
+# print(ay_calib)
+# print(az_calib)
 
 
 for line in Lines:
@@ -69,12 +70,14 @@ for line in Lines:
     accel_x = float(data[0])  
     #accel_x = accel_x - ax_calib
 
-    accel_y = float(data[1])
+    accel_y = float(data[2])
     #accel_y = accel_y - ay_calib
     
-    accel_z = float(data[2])
+    accel_z = float(data[1])
     #accel_z = accel_z - az_calib
     #accel_z = 0;
+
+    # !!! Flip x and y to use Pendulum1.txt
 
     gyro_x = float(data[3])
     gyro_y = float(data[4])
