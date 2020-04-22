@@ -8,7 +8,7 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_ThrowNormal.txt', 'r') # IMU data file
+file = open('IMUCapture_KeepSwinging2.txt', 'r') # IMU data file
 
 Lines = file.readlines()
 
@@ -77,19 +77,19 @@ for line in Lines:
 
     throw_state = int(data[0])
 
-    timestamp = float(data[1])
+    time_stamp = float(data[1])
 
-    accel_x = float(data[2])  
+    accel_x_h = float(data[2])  
 
-    accel_y = float(data[3])
+    accel_y_h = float(data[3])
     
-    accel_z = float(data[4])
+    accel_z_h = float(data[4])
 
     # !!! Flip x and y to use Pendulum1.txt
 
-    gyro_x = float(data[5])
-    gyro_y = float(data[6])
-    gyro_z = float(data[7])
+    gyro_x_h = float(data[5])
+    gyro_y_h = float(data[6])
+    gyro_z_h = float(data[7])
 
     # accel_x = float(data[0])  
 
@@ -239,10 +239,10 @@ plt.show()
 
 fig = plt.figure(figsize=(16,9))
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(xt,yt,zt, label='Position Estimate')
+ax.plot(xt,yt,-1 * zt, label='Position Estimate')
 
 ax.plot(xt[(throw_ind):(throw_ind+2)],yt[(throw_ind):(throw_ind+2)],
-    zt[(throw_ind):(throw_ind+2)], color='red')
+    -1 * zt[(throw_ind):(throw_ind+2)], color='red')
 
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
