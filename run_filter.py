@@ -8,7 +8,7 @@ from scipy import signal
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_ThrowNormal.txt', 'r') # IMU data file
+file = open('IMUCapture_KeepSwinging2.txt', 'r') # IMU data file
 Lines = file.readlines()
 
 m = len(Lines)
@@ -106,8 +106,11 @@ for line in Lines:
     gy_values_h = np.append(gy_values_h, gyro_y_h)
     gz_values_h = np.append(gz_values_h, gyro_z_h)
 
-    #gy_values_f = np.append(gy_values_f, gyro_y_f)
 
+try:
+    throw_ind = (np.where(throw_states == 1))[0][0]
+except:
+  print("No throw detected")
 
 
 a_values = np.vstack((ax_values_h, ay_values_h, az_values_h))
@@ -230,10 +233,13 @@ plt.show()
 fig = plt.figure(figsize=(16,9))
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(xt,yt,zt, label='Position Estimate')
+
+ax.plot(xt[(throw_ind):(throw_ind+2)],yt[(throw_ind):(throw_ind+2)],
+    zt[(throw_ind):(throw_ind+2)], color='red')
+
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 ax.legend()
 
 plt.show()
-
