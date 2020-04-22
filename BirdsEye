@@ -1,0 +1,109 @@
+import java.util.ArrayList;
+import java.util.Collections;
+PImage img;
+
+//inputs should be in m or m/s
+float handH = 0.9;
+float velCalc = 9.0; //not sure if robotMappedVyMag or robotMappedVy??
+float angCalc = 45.0; //alpha??
+float g = 9.8;
+
+String SidePOV = "Side View";
+String Time = "Time:";
+int width = 800;
+int height = 600;
+
+//robot start
+float rx = width/2;
+float ry = height-50;
+//ball init
+Ball ball = new Ball(0, height/2, velCalc*5, angCalc);
+boolean pause;
+float time = 0;
+
+void setup(){
+  size(800, 600);
+  background(76, 187, 23);
+  noStroke();
+  smooth();
+  frameRate(60);
+  pause = false;  
+}
+
+void draw(){
+  //ball gets updated
+  ball.update(time);
+  if (pause == false) {
+    time += 0.1;
+  }
+  textSize(25);
+  //input text
+  fill(250, 250, 250);
+  text(SidePOV, 10, 30);
+  fill(204, 50, 50);
+  //circle(bx, by, 20);
+  //draw ground
+  fill(50, 50, 50);
+  rect(0, height - 50, width, height);
+  //draw robot
+  fill(150, 150, 150);
+  quad(rx - 50, ry - 50, rx - 30, ry -10, rx +30, ry - 10, rx + 50, ry - 50);
+  fill(0,0,0);
+  circle(width/2 - 20, height-55, 20);
+  circle(width/2 + 20, height-55, 20);
+  fill(250, 250, 250);
+  textSize(20);
+  text("Robot", rx - 30, ry - 25);
+  //makrers on ground
+  text("0m", 0, height - 20);
+  circle(width/2, height - 50, 5);
+  text("2m", width/2 - 15, height - 20);
+  text("4m", width - 30, height-20);
+  textSize(15);
+  text("Vel i: " + velCalc + " m/s", 10, 60);
+  text("Angle: " + angCalc + " deg", 10, 90);
+  text("Ball X: " + round(ball.returnX()) , 10, 120);
+  text("Ball Y: " + round(ball.returnY()) , 10, 150);
+}
+
+//ball as an object to be updated
+class Ball {
+  float x0;
+  float y0;
+  float x;
+  float y; 
+  float v0; 
+  float angle;
+  float time;
+  
+  Ball(float X0, float Y0, float V0, float Angle) {
+    x0 = X0;
+    y0 = Y0;
+    v0 = V0;
+    angle = Angle;
+  }
+  
+  //update ball's position w/ time
+  void update(float t) {
+    print("w");
+    print(x);
+    print("h");
+    print(y);
+    if (x >= 0 && y>=0 && x <= width && y <= height) {
+      x = v0*t*cos(radians(angle));
+      y = (v0*t*sin(radians(angle)) - (t*t*4.9));
+      ellipse(x + x0, mapY(y+y0), 5, 5);
+      time = t;
+  } else {
+    pause = true;
+  }
+  }
+  
+  float returnV0() {return v0;}
+  float returnX() {return x;}
+  float returnY() {return y;}
+  
+}
+
+float mapY(float y){
+  return map(y, 0, height, height, 0); }
