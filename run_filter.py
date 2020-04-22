@@ -67,21 +67,26 @@ gz_calib_sum = 0
 
 for line in Lines:
     data = line.split(",")
-    accel_x = float(data[0])  
-    #accel_x = accel_x - ax_calib
 
-    accel_y = float(data[2])
+    throwState = int(data[0])
+
+    timestamp = int(data[1])
+
+    accel_x = float(data[2])  
+    #accel_x = accel_x - ax_clib
+
+    accel_y = float(data[3])
     #accel_y = accel_y - ay_calib
     
-    accel_z = float(data[1])
+    accel_z = float(data[4])
     #accel_z = accel_z - az_calib
     #accel_z = 0;
 
     # !!! Flip x and y to use Pendulum1.txt
 
-    gyro_x = float(data[3])
-    gyro_y = float(data[4])
-    gyro_z = float(data[5])
+    gyro_x = float(data[5])
+    gyro_y = float(data[6])
+    gyro_z = float(data[7])
     
     ax_values = np.append(ax_values, accel_x)
     ay_values = np.append(ay_values, accel_y)
@@ -210,7 +215,7 @@ plt.show()
 
 fig = plt.figure(figsize=(16,9))
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(xt,yt,zt, label='Kalman Filter Estimate')
+ax.plot(xt,yt,zt, label='Position Estimate')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')

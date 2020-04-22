@@ -112,13 +112,7 @@ void loop() {
   double gy_hand = IMU_Hand.getGyroY_rads();
   double gz_hand = IMU_Hand.getGyroZ_rads();
 
-  double ax_finger = IMU_Finger.getAccelX_mss();
-  double ay_finger = IMU_Finger.getAccelY_mss();
-  double az_finger = IMU_Finger.getAccelZ_mss();
-
-  double gx_finger = IMU_Finger.getGyroX_rads();
   double gy_finger = IMU_Finger.getGyroY_rads();
-  double gz_finger = IMU_Finger.getGyroZ_rads();
 
   //Serial.println(buttonState);
 
@@ -143,9 +137,16 @@ void loop() {
     Particle.publish("ax", String(ax_hand));
     Particle.publish("ay", String(ay_hand));
     Particle.publish("az", String(az_hand));
-    //dataString = dataString + String(String(ax) + "," + String(ay) + "," + String(az) + " ");
 
-    /*Serial.print("HAND: ");
+    int throwState = 0;
+
+    // If we sense a throw, set throwState = 1
+    if (gy_finger <= -4) {
+      throwState = 1;
+    }
+
+    Serial.print(throwState);
+    Serial.print(",");
     Serial.print(hand_read_time);
     Serial.print(",");
     Serial.print(ax_hand,6);
@@ -158,26 +159,7 @@ void loop() {
     Serial.print(",");
     Serial.print(gy_hand,6);
     Serial.print(",");
-    Serial.println(gz_hand,6);*/
-
-    //Serial.print("FINGER: ");
-    //Serial.print(finger_read_time);
-    //Serial.print(",");
-    /*Serial.print(ax_finger,6);
-    Serial.print(",");
-    Serial.print(ay_finger,6);
-    Serial.print(",");
-    Serial.print(az_finger,6);
-    Serial.print(",");
-    Serial.print(gx_finger,6);
-    Serial.print(",");*/
-    //Serial.println(gy_finger,6);
-    //Serial.print(",");
-    //Serial.println(gz_finger,6);
-
-    if (abs(gy_finger) >= 4) {
-      Serial.println("THROWN!!");
-    }
+    Serial.println(gz_hand,6);
   }
 
   prevButtonState = buttonState;
