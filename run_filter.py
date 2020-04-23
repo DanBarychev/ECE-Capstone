@@ -9,7 +9,7 @@ import math
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_KeepSwinging2.txt', 'r') # IMU data file
+file = open('IMUCapture_ThrowNormal.txt', 'r') # IMU data file
 
 Lines = file.readlines()
 
@@ -81,28 +81,12 @@ for line in Lines:
     time_stamp = float(data[1])
 
     accel_x_h = float(data[2])  
-
     accel_y_h = float(data[3])
-    
     accel_z_h = float(data[4])
-
-    # !!! Flip x and y to use Pendulum1.txt
 
     gyro_x_h = float(data[5])
     gyro_y_h = float(data[6])
     gyro_z_h = float(data[7])
-
-    # accel_x = float(data[0])  
-
-    # accel_y = float(data[1])
-    
-    # accel_z = float(data[2])
-
-    # # !!! Flip x and y to use Pendulum1.txt
-
-    # gyro_x = float(data[3])
-    # gyro_y = float(data[4])
-    # gyro_z = float(data[5])
 
     throw_states = np.append(throw_states, throw_state)
     time_stamps = np.append(time_stamps, time_stamp)
@@ -128,6 +112,9 @@ g_values = np.vstack((gx_values_h, gy_values_h, gz_values_h))
 
 ahrs = MadgwickAHRS()
 R = np.zeros((m,3,3))
+Z_flip = [[1,0,0], 
+          [0,1,0],
+          [0,0,-1]]
 
 for i in range(m):
     ahrs.update_imu(g_values[:, i], a_values[:, i])
@@ -196,15 +183,14 @@ theta_x = math.atan2(R_throw_mean[2][1], R_throw_mean[2][2])
 theta_y = math.atan2(-R_throw_mean[2][0], math.sqrt((R_throw_mean[2][1])**2 + R_throw_mean[2][2]**2))
 theta_z = math.atan2(R_throw_mean[1][0], R_throw_mean[0][0])
 
-"""
 print(v_x)
 print(v_y)
-print(v_z)
+print(-1 * v_z)
 
-print((theta_x / math.pi) * 360)
-print((theta_y / math.pi) * 360)
-print((theta_z / math.pi) * 360)
-"""
+print(180 - ((theta_x / math.pi) * 180))
+print((theta_y / math.pi) * 180)
+print((theta_z / math.pi) * 180)
+
 
 #Plotting
 
@@ -241,21 +227,6 @@ plt.ylabel('Position')
 
 plt.show()
 
-# 2D Position Plot
-
-# fig = plt.figure(figsize=(16,16))
-# plt.scatter(xt[0],yt[0], s=100, label='Start', c='g')
-# plt.scatter(xt[-1],yt[-1], s=100, label='Goal', c='r')
-# plt.plot(xt,yt, label='State',alpha=0.5)
-
-# plt.xlabel('X')
-# plt.ylabel('Y')
-# plt.title('Position')
-# plt.legend(loc='best')
-# plt.xlim([-100, 100])
-# plt.ylim([-100, 100])
-
-# plt.show()
 
 # 3D Position Plot
 
