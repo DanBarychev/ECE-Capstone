@@ -5,6 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.transform import Rotation
 from scipy.stats import norm
 from scipy import signal
+import math
 
 dt = 1/50 # Time Step between Filter Steps
 
@@ -184,6 +185,27 @@ ddxt = a_values_final[0,:]
 ddyt = a_values_final[1,:]
 ddzt = a_values_final[2,:]
 
+
+R_throw_mean = (R[throw_ind] + R[throw_ind+1] + R[throw_ind+2]) / 3 
+
+v_x = sum(dxt[throw_ind:(throw_ind + 3)]) / 3
+v_y = sum(dyt[throw_ind:(throw_ind + 3)]) / 3
+v_z = sum(dzt[throw_ind:(throw_ind + 3)]) / 3
+
+theta_x = math.atan2(R_throw_mean[2][1], R_throw_mean[2][2])
+theta_y = math.atan2(-R_throw_mean[2][0], math.sqrt((R_throw_mean[2][1])**2 + R_throw_mean[2][2]**2))
+theta_z = math.atan2(R_throw_mean[1][0], R_throw_mean[0][0])
+
+"""
+print(v_x)
+print(v_y)
+print(v_z)
+
+print((theta_x / math.pi) * 360)
+print((theta_y / math.pi) * 360)
+print((theta_z / math.pi) * 360)
+"""
+
 #Plotting
 
 fig = plt.figure(figsize=(16,9))
@@ -241,8 +263,8 @@ fig = plt.figure(figsize=(16,9))
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(xt,yt,-1 * zt, label='Position Estimate')
 
-ax.plot(xt[(throw_ind):(throw_ind+2)],yt[(throw_ind):(throw_ind+2)],
-    -1 * zt[(throw_ind):(throw_ind+2)], color='red')
+ax.plot(xt[(throw_ind):(throw_ind+3)],yt[(throw_ind):(throw_ind+3)],
+    -1 * zt[(throw_ind):(throw_ind+3)], color='red')
 
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
