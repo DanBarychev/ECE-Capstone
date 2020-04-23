@@ -141,7 +141,7 @@ void loop() {
     int throwState = 0;
 
     // If we sense a throw, set throwState = 1
-    if (gy_finger <= -4) {
+    if (gy_finger <= -6) {
       throwState = 1;
     }
 
