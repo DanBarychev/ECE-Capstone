@@ -33,6 +33,7 @@ S20A is 3.3V voltage regulator MIC5205-3.3BM5
 */
 
 #include "MPU9250.h"
+#include <vector>
 
 // an MPU9250 object with the MPU-9250 sensor on I2C bus 0 with address 0x68
 MPU9250 IMU_Finger(Wire,0x68);
@@ -48,6 +49,15 @@ int prevButtonState = 0;
 int buttonState = 0;
 int ledState = 0;
 int lastChangeTime = millis();
+
+std::vector<double> throw_state_vals;
+std::vector<double> timestamp_vals;
+std::vector<double> acc_vals_x;
+std::vector<double> acc_vals_y;
+std::vector<double> acc_vals_z;
+std::vector<double> gyro_vals_x;
+std::vector<double> gyro_vals_y;
+std::vector<double> gyro_vals_z;
 
 void setup() {
   // serial to display data
@@ -102,7 +112,6 @@ void loop() {
   double hand_read_time = millis();
 
   IMU_Finger.readSensor();
-  double finger_read_time = millis();
 
   double ax_hand = IMU_Hand.getAccelX_mss();
   double ay_hand = IMU_Hand.getAccelY_mss();
@@ -111,6 +120,10 @@ void loop() {
   double gx_hand = IMU_Hand.getGyroX_rads();
   double gy_hand = IMU_Hand.getGyroY_rads();
   double gz_hand = IMU_Hand.getGyroZ_rads();
+
+  double mx_hand = IMU_Hand.getMagX_uT();
+  double my_hand = IMU_Hand.getMagY_uT();
+  double mz_hand = IMU_Hand.getMagZ_uT();
 
   double gy_finger = IMU_Finger.getGyroY_rads();
 
@@ -129,21 +142,29 @@ void loop() {
 
       digitalWrite(ledPin, LOW);
       ledState = 0;
+
+      //publishData();
     }
   }
 
   if (ledState == 1) {
     // Record data
-    Particle.publish("ax", String(ax_hand));
-    Particle.publish("ay", String(ay_hand));
-    Particle.publish("az", String(az_hand));
 
     int throwState = 0;
 
     // If we sense a throw, set throwState = 1
-    if (gy_finger <= -6) {
+    if (gy_finger <= -5) {
       throwState = 1;
     }
+
+    throw_state_vals.push_back(throwState);
+    timestamp_vals.push_back(hand_read_time);
+    acc_vals_x.push_back(ax_hand);
+    acc_vals_y.push_back(ay_hand);
+    acc_vals_z.push_back(az_hand);
+    gyro_vals_x.push_back(gx_hand);
+    gyro_vals_y.push_back(gy_hand);
+    gyro_vals_z.push_back(gz_hand);
 
     Serial.print(throwState);
     Serial.print(",");
@@ -159,10 +180,24 @@ void loop() {
     Serial.print(",");
     Serial.print(gy_hand,6);
     Serial.print(",");
-    Serial.println(gz_hand,6);
+    Serial.print(gz_hand,6);
+    Serial.print(",");
+    Serial.print(mx_hand,6);
+    Serial.print(",");
+    Serial.print(my_hand,6);
+    Serial.print(",");
+    Serial.println(mz_hand,6);
   }
 
   prevButtonState = buttonState;
 
   delay(20);
 } 
+
+void publishData() {
+  for (int i = 0; i < timestamp_vals.size(); i++) {
+    Particle.publish("googleDocs", "{\"throw_state\":\"" + String(throw_state_vals[i]) + "\", \"timestamp\":\"" + String(timestamp_vals[i]) + "\", \"ax\":\"" + String(acc_vals_x[i]) + "\", \"ay\":\"" + String(acc_vals_y[i]) + "\", \"az\":\"" + String(acc_vals_z[i]) + "\", \"gx\":\"" + String(gyro_vals_x[i]) + "\", \"gy\":\"" + String(gyro_vals_y[i]) + "\", \"gz\":\"" + String(gyro_vals_z[i]) + "\"}", 60, PRIVATE);
+
+    delay(1000);
+  }
+}

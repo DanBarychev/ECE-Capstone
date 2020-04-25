@@ -5,8 +5,8 @@ int height = 600;
 
 float landingLocDiam; 
 
-float actualX = -1;  // actual landing location coordinates (m)
-float actualY = 3;
+float actualX = 0;  // actual landing location coordinates (m)
+float actualY = 1.0;
 float actualT = 0.8; // actual time of flight (s)
 float mappedActualT = actualT * fps;   // in frames
 
@@ -17,9 +17,9 @@ float vx = -1.2;
 float vz = 2; 
 */
 
-float vy = 3.9;        // horizontal velocity in forward direction (m s^-1)
-float vx = -1.2;        // horizontal velocity in left/right direction (m s^-1)
-float vz = 2;        // vertical velocity (m s^-1)
+float vy = 1.83;        // horizontal velocity in forward direction (m s^-1)
+float vx = 0;        // horizontal velocity in left/right direction (m s^-1)
+float vz = 0.42;        // vertical velocity (m s^-1)
 
 // TODO: how to use this info?
 // float thetaDeg = 45;                   // vertical angle (deg)
@@ -28,7 +28,7 @@ float vz = 2;        // vertical velocity (m s^-1)
 float phiDeg = 0;                    // horizontal angle (deg)
 float phi = (PI / 180) * phiDeg;       // horizontal angle (rad)
 
-float hThrow = 1.20;                   // height ball at release (m)
+float hThrow = 1.0;                   // height ball at release (m)
 
 float g = 9.81;                        // gravitational field strength (m s^-2)
 
