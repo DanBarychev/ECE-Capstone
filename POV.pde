@@ -1,7 +1,9 @@
 int fps = 60;
 
-int width = 600; 
+int width = 1200; 
 int height = 600;
+
+int viewWidth = width / 2;
 
 float landingLocDiam;
 
@@ -129,16 +131,16 @@ void predictLandingLocation () {
   predictedX = horizDist * sin(alpha + phi);
   predictedY = (signNum(dispY)) * (horizDist * cos(alpha + phi));
 
-  mappedX = (width / 2) + (predictedX / 2) * width; // before: / 6  // predicted x and y landing locations mapped onto screen
+  mappedX = (viewWidth / 2) + (predictedX / 2) * viewWidth; // before: / 6  // predicted x and y landing locations mapped onto screen
   mappedY = height * (1 - (predictedY / 2));   // before: /6
 
-  mappedActualX = (width / 2) + (actualX / 2) * width; // before: /6
+  mappedActualX = (viewWidth / 2) + (actualX / 2) * viewWidth; // before: /6
   mappedActualY= height * (1 - (actualY / 2));         // before: /6
 } 
 
 void initBallData() {
   ballDiam = 15;  // before: 5
-  ballX = width / 2;
+  ballX = viewWidth / 2;
   ballY = height;
   isLanded = false;
   ballCaught = false;
@@ -156,19 +158,19 @@ void initBall () {
 }
 
 void initUser() {
-  userX = width / 2; 
+  userX = viewWidth / 2; 
   userY = height;
 }
 
 void initRobotData() {
-  robotReachX = width / 2; 
+  robotReachX = viewWidth / 2; 
   robotReachY =  height / 2;
-  robotReachDiameter = width; // before:(2 / 3.0) * width
-  robotStartX = width / 2;
+  robotReachDiameter = viewWidth; // before:(2 / 3.0) * width
+  robotStartX = viewWidth / 2;
   robotStartY = height / 2;
   robotX = robotStartX;
   robotY = robotStartY;
-  robotDiameter = (1/5.0) * width; // before:1 / 15.0
+  robotDiameter = (1/5.0) * viewWidth; // before:1 / 15.0
   isLocReached = false;
   dirChanged = false;
 }
@@ -204,7 +206,7 @@ float[] getRobotVelocities(float robotMappedVxMag, float robotMappedVyMag) {
 }
 
 void initRobotNavigation () {
-  robotMappedV = ((width * robotSpeed) / 2) / fps; // before: /6
+  robotMappedV = ((viewWidth * robotSpeed) / 2) / fps; // before: /6
   robotMoveAngle = atan((abs(robotY - mappedY)) / (abs(robotX - mappedX)));
   robotMappedVxMag = robotMappedV * cos(robotMoveAngle);
   robotMappedVyMag = robotMappedV * sin(robotMoveAngle);
@@ -227,7 +229,7 @@ void init () {
 }
 
 void setup(){
-  size(600, 600);
+  size(1200, 600);
   init();  
   println(userX);
   println(userY);
@@ -299,6 +301,16 @@ void drawLandings() {
    text("La", mappedActualX-10, mappedActualY+8); // before: -8, + 5 // La symbol at predicted landing location
 }
 
+void drawball () {
+  fill(250, 0, 0);
+  if (!ballCaught) {
+    circle(ballX, ballY, ballDiam);  
+  }
+  else {
+    circle(robotX, robotY, ballDiam); 
+  }
+} 
+
 void drawScreen () {
   background(76, 187, 23);
   
@@ -323,16 +335,6 @@ void drawScreen () {
   
   drawball ();
 }
-
-void drawball () {
-  fill(250, 0, 0);
-  if (!ballCaught) {
-    circle(ballX, ballY, ballDiam);  
-  }
-  else {
-    circle(robotX, robotY, ballDiam); 
-  }
-} 
 
 void draw(){ 
   // default frame rate: 60 frames per second
