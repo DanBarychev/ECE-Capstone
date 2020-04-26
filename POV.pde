@@ -95,6 +95,8 @@ float robotMappedVyMag;
 boolean isLocReached;
 boolean dirChanged;
 int dirChangeFrame;
+int robotSteps;
+int robotReturnSteps;
 
 String BirdPOV = "Bird's Eye View";
 
@@ -121,7 +123,6 @@ float getDisplacementX (float t) {
 void predictLandingLocation () {
   landingLocDiam = 60;  // before: 20
   t = getTimeOfFlight ();
-  print(t);
   dispX = getDisplacementX(t);
   dispY = getDisplacementY(t);
   if (dispY == 0) dispY = 0.000000001;     // TODO: fix this
@@ -173,6 +174,8 @@ void initRobotData() {
   robotDiameter = (1/5.0) * viewWidth; // before:1 / 15.0
   isLocReached = false;
   dirChanged = false;
+  robotSteps = 0;
+  robotReturnSteps = 0;
 }
 
 int getQuadrant () {
@@ -231,8 +234,6 @@ void init () {
 void setup(){
   size(1200, 600);
   init();  
-  println(userX);
-  println(userY);
 }
 
 void moveBall() {
@@ -257,7 +258,8 @@ void isBallCaught () {
 }
 
 void timerFired() {
-  if (frameCount < mappedActualT) {
+  if ((!isLocReached) && (frameCount < mappedActualT)) {
+    robotSteps += 1;
     moveBall();
   }
   else if (!isLanded) {
@@ -279,9 +281,11 @@ void timerFired() {
       changeDirection();
       isBallCaught();
     }
-    if ((frameCount - dirChangeFrame) < robotTravelTime) {
+    robotReturnSteps+=1;
+    if (robotReturnSteps < robotSteps) {
       moveRobot();
     }
+    
   } 
 }
 
