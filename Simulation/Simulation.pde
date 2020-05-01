@@ -1,3 +1,11 @@
+PImage img; //source: https://unsplash.com/photos/Qgq7j_QCYtw
+PImage target; //source: http://www.clker.com/clipart-red-snipper-target.html
+PImage sky;  //source: https://www.freepik.com/free-photo/white-cloud-blue-sky-sea_3962982.htm#page=1&query=sky&position=0
+PImage aboveP;  //source: https://www.pinterest.com/pin/267753140317410600/
+PImage basket;  //source: https://www.shutterstock.com/image-photo/empty-fruit-wicker-brown-basket-bowl-266927345
+PImage tennis;  //source: https://www.stickpng.com/img/sports/tennis/ball-tennis
+PImage manSide; //source: http://immediate-entourage.blogspot.com/2011/04/man-standing-side-view.html
+
 int fps = 60;
 
 int width = 1200; 
@@ -7,9 +15,9 @@ int viewWidth = width / 2;
 
 float landingLocDiam;
 
-float actualX = 0.3;
-float actualY = 1.1;
-float actualT = 0.9;
+float actualX = -.5;
+float actualY = 1.42;
+float actualT = 0.4;
 
 /*
 float actualX = 2.5;  // actual landing location coordinates (m)
@@ -24,17 +32,17 @@ float actualT = 0.8; // actual time of flight (s)
 */
 float mappedActualT = actualT * fps;   // in frames
 
-
+/*
 float vy = 1.37;     // vx of AHRS
 float vx = 0.22;     // vy of AHRS
 float vz = 0.36;     // vz of AHRS
 
-
-/*
-float vy = 3.9; 
-float vx = -1.2;
-float vz = 2; 
 */
+
+float vy = 2.5; 
+float vx = -.8;
+float vz = 1.3; 
+
 
 /*
 float vy = 2;        // horizontal velocity in forward direction (m s^-1)
@@ -46,10 +54,10 @@ float vz = 2;        // vertical velocity (m s^-1)
 // float thetaDeg = 45;                   // vertical angle (deg)
 // float theta = (PI / 180) * thetaDeg;   // vertical angle (rad)
 
-float phiDeg = 19;                    // horizontal angle (deg)
+float phiDeg = 0;                    // horizontal angle (deg)
 float phi = (PI / 180) * phiDeg;       // horizontal angle (rad)
 
-float hThrow = 1;                   // height ball at release (m)
+float hThrow = 1.0;                   // height ball at release (m)
 
 float g = 9.81;                        // gravitational field strength (m s^-2)
 
@@ -123,6 +131,7 @@ float getDisplacementX (float t) {
 void predictLandingLocation () {
   landingLocDiam = 60;  // before: 20
   t = getTimeOfFlight ();
+  print(t);
   dispX = getDisplacementX(t);
   dispY = getDisplacementY(t);
   if (dispY == 0) dispY = 0.000000001;     // TODO: fix this
@@ -171,11 +180,9 @@ void initRobotData() {
   robotStartY = height / 2;
   robotX = robotStartX;
   robotY = robotStartY;
-  robotDiameter = (1/5.0) * viewWidth; // before:1 / 15.0
+  robotDiameter = (1/8.0) * viewWidth; // before:1 / 15.0
   isLocReached = false;
   dirChanged = false;
-  robotSteps = 0;
-  robotReturnSteps = 0;
 }
 
 int getQuadrant () {
@@ -233,7 +240,17 @@ void init () {
 
 void setup(){
   size(1200, 600);
+  img = loadImage("grass.jpg");
+  target = loadImage("target.png");
+  sky = loadImage("sky.jpg");
+  aboveP = loadImage("above.png");
+  basket = loadImage("basket.png");
+  tennis = loadImage("tennis.png");
+  manSide = loadImage("man.png");
+  
   init();  
+  println(userX);
+  println(userY);
 }
 
 void moveBall() {
@@ -258,8 +275,7 @@ void isBallCaught () {
 }
 
 void timerFired() {
-  if ((!isLocReached) && (frameCount < mappedActualT)) {
-    robotSteps += 1;
+  if (frameCount < mappedActualT) {
     moveBall();
   }
   else if (!isLanded) {
@@ -281,11 +297,9 @@ void timerFired() {
       changeDirection();
       isBallCaught();
     }
-    robotReturnSteps+=1;
-    if (robotReturnSteps < robotSteps) {
+    if ((frameCount - dirChangeFrame) < robotTravelTime) {
       moveRobot();
     }
-    
   } 
 }
 
@@ -308,26 +322,42 @@ void drawLandings() {
 void drawball () {
   fill(250, 0, 0);
   if (!ballCaught) {
-    circle(ballX, ballY, ballDiam);  
+    image(tennis, ballX - 9, ballY - 9);
   }
   else {
-    circle(robotX, robotY, ballDiam); 
+    image(tennis, robotX-10, robotY-10); 
   }
 } 
 
 void drawScreen () {
-  background(76, 187, 23);
-  
-  fill(76, 187, 23); 
-  circle(robotReachX, robotReachY, robotReachDiameter); // circular robot reach area 
-  
+  //side view
+  image(sky,400,0);
+  image(img, 600, 570);
+  image(manSide, 320, 90);
+  line(605, 570, 605, 270);
+  fill(255,255,255);
+  text("Side View", 630, 50);
+  textSize(16);
+  text("0m", 600, height -10);
+  text("1m", 890, height -10);
+  text("2m", width - 23, height-10);
+  line(600,0, 600, 600);
+  //bird's view
+  image(img, -200, -200);
+  image(target, 1, -1);
+  //fill(76, 187, 23); 
+  //circle(robotReachX, robotReachY, robotReachDiameter); // circular robot reach area 
+
+  image(aboveP, 150, height-50);
   fill(250, 250, 250);
-  circle(userX, userY, 60);  // before:20 // user at bottom of screen
+  //circle(userX, userY, 60);  // before:20 // user at bottom of screen
   
   drawLandings();
   
   fill(211,211,211);
+  print(robotX);
   circle(robotX, robotY, robotDiameter); // robot
+  image(basket, robotX-38, robotY-38);
   
   textSize(25);
   
@@ -335,8 +365,11 @@ void drawScreen () {
   text(BirdPOV, 30, 50);
   
   fill(0, 0, 0);
-  text("R", robotX-21, robotY+24); // before: -7, +8 // R symbol on robot
-  
+  text("R", robotX-10, robotY+12); // before: -7, +8 // R symbol on robot
+
+
+  //line(300, 300, 300, 262);
+  //circle(300,300, 5);
   drawball ();
 }
 
