@@ -5,6 +5,8 @@ PImage aboveP;  //source: https://www.pinterest.com/pin/267753140317410600/
 PImage basket;  //source: https://www.shutterstock.com/image-photo/empty-fruit-wicker-brown-basket-bowl-266927345
 PImage tennis;  //source: https://www.stickpng.com/img/sports/tennis/ball-tennis
 PImage manSide; //source: http://immediate-entourage.blogspot.com/2011/04/man-standing-side-view.html
+PImage basketSide; //source: https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX3327394.jpg
+
 
 int fps = 60;
 
@@ -25,6 +27,10 @@ float actualY = 1.5;
 float actualT = 0.8; // actual time of flight (s)
 */
 
+//side view inits
+Ball ball = new Ball(600, height/2 + 40, 50, 45);
+boolean pause;
+float timeS = 0;
 /*
 float actualX = -1;  // actual landing location coordinates (m)
 float actualY = 3;
@@ -105,6 +111,44 @@ boolean dirChanged;
 int dirChangeFrame;
 int robotSteps;
 int robotReturnSteps;
+float robotSideX = 852;
+
+//ball as an object to be updated for the side view
+class Ball {
+  float x0;
+  float y0;
+  float x;
+  float y; 
+  float v0; 
+  float angle;
+  float timeS;
+  
+  Ball(float X0, float Y0, float V0, float Angle) {
+    x0 = X0;
+    y0 = Y0;
+    v0 = V0;
+    angle = Angle;
+  }
+  
+  //update ball's position w/ time
+  void update(float t) {
+    if (x >= 0 && x <= width && y <= height && y >= -250) {
+      x = v0*t*cos(radians(angle));
+      y = (v0*t*sin(radians(angle)) - (t*t*4.9));
+      //draw the ball in the side view
+      image(tennis, x + x0, mapY(y+y0));
+      timeS = t;
+  } else {
+    pause = true;
+  }
+  }
+  
+  float returnV0() {return v0;}
+  
+}
+
+float mapY(float y){
+  return map(y, 0, height, height, 0); }
 
 String BirdPOV = "Bird's Eye View";
 
@@ -240,6 +284,7 @@ void init () {
 
 void setup(){
   size(1200, 600);
+  //load images for aesthetics 
   img = loadImage("grass.jpg");
   target = loadImage("target.png");
   sky = loadImage("sky.jpg");
@@ -247,7 +292,9 @@ void setup(){
   basket = loadImage("basket.png");
   tennis = loadImage("tennis.png");
   manSide = loadImage("man.png");
-  
+  basketSide = loadImage("basketSide.png");
+ 
+  pause = false;
   init();  
   println(userX);
   println(userY);
@@ -261,6 +308,7 @@ void moveBall() {
 void moveRobot() {
   robotX += robotMappedVx;
   robotY += robotMappedVy;
+  robotSideX -= robotMappedVy;
 }
 
 void changeDirection () {
@@ -334,14 +382,22 @@ void drawScreen () {
   image(sky,400,0);
   image(img, 600, 570);
   image(manSide, 320, 90);
-  line(605, 570, 605, 270);
   fill(255,255,255);
   text("Side View", 630, 50);
   textSize(16);
+  fill(50,50,50);
+  text("H: 1.0m", 601, 300);
+  fill(255,255,255);
   text("0m", 600, height -10);
   text("1m", 890, height -10);
   text("2m", width - 23, height-10);
   line(600,0, 600, 600);
+  //robot and wheels
+  image(basketSide, robotSideX, 520);
+  fill(70,70,70);
+  rect(robotSideX + 10, 558, 74, 5);
+  circle(robotSideX + 28, height-35, 15);
+  circle(robotSideX + 68, height-35, 15);
   //bird's view
   image(img, -200, -200);
   image(target, 1, -1);
@@ -371,6 +427,10 @@ void drawScreen () {
   //line(300, 300, 300, 262);
   //circle(300,300, 5);
   drawball ();
+  ball.update(timeS);
+  if (pause == false) {
+    timeS += 0.5;
+  }
 }
 
 void draw(){ 
