@@ -6,6 +6,7 @@ PImage basket;     //source: https://www.shutterstock.com/image-photo/empty-frui
 PImage tennis;     //source: https://www.stickpng.com/img/sports/tennis/ball-tennis
 PImage manSide;    //source: http://immediate-entourage.blogspot.com/2011/04/man-standing-side-view.html
 PImage basketSide; //source: https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX3327394.jpg
+// Consulted the Carnegie Mellon University 18349 Fall 2019 Lecture 21 for help with PID control
 
 int fps = 60;
 
@@ -68,7 +69,6 @@ float robotStartY;
 float robotX;
 float robotY;
 float robotDiameter;
-float robotSpeed = 1.5;   // m s^-1
 float robotMappedV;
 float robotMoveAngle; 
 float robotMappedVx;
@@ -91,6 +91,26 @@ float actualVz;
 float tFromRelease;
 
 String BirdPOV = "Bird's Eye View";
+
+// PID
+float maxVoltage = 8;  // V
+float maxRobotSpeed = 2;    // m s^-1
+float motorError = 0.1;  
+float maxDutyCycle = 1;
+float minDutyCycle = 0.6;
+float vTarget = 2;     // m s^-1
+float Kp = 0.17;
+float Kd = 0.17;
+float Ki = 0.17;
+
+float vActual;
+float prevError;
+FloatList listErrors;
+float vActualError;
+float vActualErrorSign;
+float error;
+float dutyCycle;
+float voltage;
 
 int signNum (float num) {
   if (num < 0) return -1;
@@ -127,7 +147,7 @@ void predictLandingLocation () {
   mappedY = height * (1 - (predictedY / 2));   // before: /6
 
   mappedActualX = (viewWidth / 2) + (actualX / 2) * viewWidth; // before: /6
-  mappedActualY = height * (1 - (actualY / 2));         // before: /6
+  mappedActualY = height * (1 - (actualY / 2));         // before: /6 //<>//
 } 
 
 void initBallData() {
@@ -152,6 +172,19 @@ void initBall () {
 void initUser() {
   userX = viewWidth / 2; 
   userY = height;
+}
+
+void initPIDdata() {
+  vActual = 0;
+  prevError = 0;
+  listErrors = new FloatList();
+  vActualError = random(motorError);
+  if (random(1) < 0.5) {
+    vActualErrorSign = -1;
+  }
+  else {
+    vActualErrorSign = 1;
+  }
 }
 
 void initRobotData() {
@@ -198,14 +231,39 @@ float[] getRobotVelocities(float robotMappedVxMag, float robotMappedVyMag) {
   return velocities;
 }
 
-void initRobotNavigation () {
-  robotMappedV = ((viewWidth * robotSpeed) / 2) / fps; // before: /6
+float sumElems(FloatList lst) {
+  float sum = 0;
+  for (int i = 0; i < lst.size(); i++) {
+    sum += lst.get(i);
+  }
+  return sum;
+}
+
+void PIDSim () {
+  error = vTarget - vActual;
+  dutyCycle = Kp * abs(error) + Kd * abs(error - prevError) + Ki * (sumElems(listErrors));
+  voltage = max(min(dutyCycle, maxDutyCycle), minDutyCycle) * maxVoltage;
+  vActual = ((voltage * maxRobotSpeed) / maxVoltage) * (1 + vActualErrorSign * vActualError);
+  listErrors.append(error);
+  prevError = error;
+}
+
+void getRobotSpeed() {
+  PIDSim();
+  robotMappedV = ((viewWidth * vActual) / 2) / fps; // before: /6
   robotMoveAngle = atan((abs(robotY - mappedY)) / (abs(robotX - mappedX)));
   robotMappedVxMag = robotMappedV * cos(robotMoveAngle);
   robotMappedVyMag = robotMappedV * sin(robotMoveAngle);
   float[] robotVelocities = getRobotVelocities(robotMappedVxMag, robotMappedVyMag);
   robotMappedVx = robotVelocities[0];
   robotMappedVy = robotVelocities[1];
+  if (dirChanged) {
+    changeDirection();
+  } 
+}
+
+void initRobotNavigation () {
+  getRobotSpeed();
   robotTravelTime = (dist(robotX, robotY, mappedX, mappedY) / robotMappedV);
 }
 
@@ -232,8 +290,9 @@ void initSideView() {
 
 void init () {
   predictLandingLocation();
-  initUser();
   initBall ();
+  initUser();
+  initPIDdata();
   initRobot();
   initSideView();
 }
@@ -264,6 +323,7 @@ void moveSideBall() {
 }
 
 void moveRobot() {
+  getRobotSpeed();
   robotX += robotMappedVx;
   robotY += robotMappedVy;
 }
@@ -284,31 +344,32 @@ void isBallCaught () {
 }
 
 void timerFired() {
-   if (!isLanded) {
-     moveBall();
-     moveSideBall();
-   }
-   
-   if (!isLocReached) {
-     robotSteps += 1;
-     moveRobot();
-     moveSideRobot();
-   }
-   
-   if ((!isLanded) && (frameCount >= mappedActualT)) {
-     isLanded = true;
-     isBallCaught();
-   }
-  
-   if ((!isLocReached) && (frameCount >= robotTravelTime)){
-    isLocReached = true;
+  if (!isLanded) {
+    moveBall();
+    moveSideBall();
   }
   
+  if (!isLocReached) {
+    robotSteps += 1;
+    moveRobot();   // speed is updated in moveRobot(), the change also affects side view robot
+    moveSideRobot();
+  }
+   
+  if ((!isLanded) && (frameCount >= mappedActualT)) {
+    isLanded = true;
+    isBallCaught();
+  }
+   
+  if ((!isLocReached) && (dist(robotX, robotY, mappedX, mappedY) < ((landingLocDiam / 16)  + (robotDiameter / 16)))) {
+    isLocReached = true;
+  }
+   
   if (isLanded && isLocReached) {
     // robot goes back to start location
     if (!dirChanged) {
       dirChanged = true;
-      changeDirection();
+      initPIDdata();      // reset PID, error on the way back is probably different  
+      changeDirection();  // TODO: is this line necessary???
     }
     
     if (robotReturnSteps < robotSteps) {
