@@ -80,8 +80,8 @@ float robotMappedVxMag;
 float robotMappedVyMag;
 boolean isLocReached;
 boolean dirChanged;
-int robotSteps;
-int robotReturnSteps;
+
+float robotReturnY = 530;
 
 boolean move; // robot moves after computation time ellapsed
 
@@ -115,6 +115,12 @@ float vActualErrorSign;
 float error;
 float dutyCycle;
 float voltage;
+
+boolean pickupBall;
+float pickupBallTime;
+int pickupBallFrame;
+boolean ballPickedUp;
+boolean returnStartPos;
 
 int signNum (float num) {
   if (num < 0) return -1;
@@ -160,6 +166,9 @@ void initBallData() {
   ballY = height;
   isLanded = false;
   ballCaught = false;
+  pickupBall = false;
+  ballPickedUp = false;
+  pickupBallTime = 2;
 }
 
 // TODO: scale?
@@ -202,9 +211,9 @@ void initRobotData() {
   robotDiameter = (1/8.0) * viewWidth; // before:1 / 15.0
   isLocReached = false;
   dirChanged = false;
-  robotSteps = 0;
-  robotReturnSteps = 0;
   move = false;
+  robotReturnY = 530;
+  returnStartPos = false;
 }
 
 int getQuadrant () {
@@ -262,9 +271,30 @@ void getRobotSpeed() {
   float[] robotVelocities = getRobotVelocities(robotMappedVxMag, robotMappedVyMag);
   robotMappedVx = robotVelocities[0];
   robotMappedVy = robotVelocities[1];
-  if (dirChanged) {
-    changeDirection();
-  } 
+}
+
+void getRobotReturnUserSpeed () {
+  PIDSim();
+  robotMappedV = ((viewWidth * vActual) / 2) / fps; 
+  if ((robotX - (viewWidth / 2)) == 0) {
+    robotMappedVx = 0;
+    robotMappedVy = robotMappedV; 
+  }
+  else {
+    robotMoveAngle = atan((abs(robotY - robotReturnY)) / (abs(robotX - (viewWidth / 2))));
+    robotMappedVx = robotMappedV * cos(robotMoveAngle);
+    robotMappedVy = robotMappedV * sin(robotMoveAngle);
+    if (((viewWidth / 2) - robotX) < 0) {
+      robotMappedVx = -robotMappedVx;
+    }
+  }
+}
+
+void getRobotReturnPosSpeed() {
+  PIDSim();
+  robotMappedV = ((viewWidth * vActual) / 2) / fps;
+  robotMappedVx = 0;
+  robotMappedVy = -robotMappedV;
 }
 
 void initRobotNavigation () {
@@ -328,18 +358,21 @@ void moveSideBall() {
 }
 
 void moveRobot() {
-  getRobotSpeed();
+  if (returnStartPos) {
+    getRobotReturnPosSpeed();
+  }
+  else if (dirChanged) {
+    getRobotReturnUserSpeed();
+  }
+  else {
+    getRobotSpeed();
+  }
   robotX += robotMappedVx;
   robotY += robotMappedVy;
 }
 
 void moveSideRobot() {
   robotSideY -= robotMappedVy;
-}
-
-void changeDirection () {
-  robotMappedVx = -robotMappedVx;
-  robotMappedVy = -robotMappedVy;
 }
 
 void isBallCaught () {
@@ -359,7 +392,6 @@ void timerFired() {
   }
   
   if (move && (!isLocReached)) {
-    robotSteps += 1;
     moveRobot();   // speed is updated in moveRobot(), the change also affects side view robot
     moveSideRobot();
   }
@@ -380,15 +412,30 @@ void timerFired() {
     if (!dirChanged) {
       dirChanged = true;
       initPIDdata();      // reset PID, error on the way back is probably different  
-      changeDirection();  // TODO: is this line necessary???
     }
     
-    if (robotReturnSteps < robotSteps) {
-      robotReturnSteps+=1;
+    if ((!pickupBall) && (dist(robotX, robotY, viewWidth / 2, robotReturnY) >= ((robotDiameter/ 16)  + (robotDiameter / 16)))) {
       moveRobot();
       moveSideRobot();
-    } 
-  } 
+    }
+ 
+    else if (!pickupBall) {
+      pickupBall = true;
+      pickupBallFrame = frameCount;
+    }
+    else if ((!ballPickedUp) && (frameCount - pickupBallFrame) > ((pickupBallTime / 2) * fps)) {
+      ballPickedUp = true;
+      pickupBallFrame = frameCount;
+    }
+    else if ((ballPickedUp) && (frameCount - pickupBallFrame) > ((pickupBallTime / 2) * fps)) {
+      returnStartPos = true;
+      initPIDdata();
+    }
+  }
+  if ((returnStartPos) && ((robotY - (height / 2)) >= (robotDiameter / 16))) {
+    moveRobot();
+    moveSideRobot();
+  }
 }
 
 void drawLandings() {
@@ -465,7 +512,9 @@ void drawScreen () {
 
   image(basket, robotX-38, robotY-38);  // robot
   
-  drawball (); 
+  if (!(ballCaught && ballPickedUp)) {
+    drawball (); 
+  }
 }
 
 void draw(){ 
