@@ -425,7 +425,7 @@ void drawSideView() {
   //float ballSpeedY = (ballMappedSpeedY  *  2) / height;
   float verticalDisplacement = altitude - hThrow;
   String alt = str(round(altitude*10)*.1);
-  String heightD = str(round(verticalDisplacement*10)*.1);
+  String heightD = str(round(verticalDisplacement*100)*.01);
   image(sky, viewWidth, 0); 
   sky.resize(viewWidth, height);
   image(img, viewWidth, 570);
@@ -441,8 +441,8 @@ void drawSideView() {
   textSize(17);
   text("Flight Time: " + str(round(tFromRelease*10)*.1) + "s", 1050, 30);
   textSize(16);
-  text("Hand Height: " + alt + "m", 630, 50);
-  text("Ball Height: " + heightD + "m", 630, 70);
+  text("Altitude: " + alt + "m", 630, 50);
+  text("Ball Y Displacement: " + heightD + "m", 630, 70);
   fill(50,50,50);
   text("H: 1.0m", 601, 300);
   fill(255,255,255);
@@ -462,7 +462,7 @@ void drawSideView() {
   rect(robotSideY + 10, 558, 74, 5);
   circle(robotSideY + 28, height-35, 15);
   circle(robotSideY + 68, height-35, 15);
-  
+ 
 }
 
 void drawScreen () {
@@ -472,12 +472,7 @@ void drawScreen () {
   float verticalDisplacement = altitude - hThrow;
   float ballSpeedZ = sqrt(sq(actualVz) - 2 * g * verticalDisplacement); // derived from equation of motion
   float ballSpeed = sqrt(sq(ballSpeedX) + sq(ballSpeedY)  + sq(ballSpeedZ));
-  //String alt = str(altitude);
-  String ballSX = str(round(ballSpeedX*10)*.1);
-  String ballSY = str(round(ballSpeedY*10)*.1);
-  String ballSZ = str(round(ballSpeedZ*10)*.1);
-  String ballSped = str(round(ballSpeed*10)*.1);
-  //String heightD = str(verticalDisplacement);
+  String bSZ = str(round(actualVz*100)*.01);
   drawSideView();
   //bird's view
   image(img, -200, -200);
@@ -500,10 +495,10 @@ void drawScreen () {
   textSize(17);
   text("Flight Time: " + str(round(tFromRelease*10)*.1) + "s", 450, 30);
   textSize(16);
-  text("Ball Vtotal: " + ballSped + "m/s", 25, 50);
-  text("Ball Vx: " + ballSX + "m/s", 25, 550);
-  text("Ball Vy: " +ballSY + "m/s", 25, 570);
-  text("Ball Vz: " +ballSZ + "m/s", 25, 590);
+  text("Ball Vtotal: " + str(round(ballSpeed*100)*.01) + "m/s", 25, 50);
+  text("Ball Vx: " + str(round(ballSpeedX*10000)*.0001) + "m/s", 25, 550);
+  text("Ball Vy: " +str(round(ballSpeedY*10000)*.0001) + "m/s", 25, 570);
+  text("Ball Vz: " + bSZ + "m/s", 25, 590);
   drawLandings();
   
   textSize(21);
