@@ -7,6 +7,7 @@ PImage tennis;     //source: https://www.stickpng.com/img/sports/tennis/ball-ten
 PImage manSide;    //source: http://immediate-entourage.blogspot.com/2011/04/man-standing-side-view.html
 PImage basketSide; //source: https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX3327394.jpg
 // Consulted the Carnegie Mellon University 18349 Fall 2019 Lecture 21 for help with PID control
+// Consulted https://github.com/wizord-gaming/youtube/blob/master/button/button.pde for help drawing the reset button
 
 int fps = 60;
 
@@ -81,7 +82,7 @@ float robotMappedVyMag;
 boolean isLocReached;
 boolean dirChanged;
 
-float robotReturnY = 530;
+float robotReturnY;
 
 boolean move; // robot moves after computation time ellapsed
 
@@ -122,6 +123,16 @@ int pickupBallFrame;
 boolean ballPickedUp;
 boolean returnStartPos;
 
+int buttonX = ceil(width * 0.75);
+int buttonY = 10;
+int buttonWidth = 70;
+int buttonHeight = 30;
+
+boolean first; 
+boolean second;
+int startDelayTime; 
+
+
 int signNum (float num) {
   if (num < 0) return -1;
   else return 1;
@@ -157,7 +168,7 @@ void predictLandingLocation () {
   mappedY = height * (1 - (predictedY / 2));   // before: /6
 
   mappedActualX = (viewWidth / 2) + (actualX / 2) * viewWidth; // before: /6
-  mappedActualY = height * (1 - (actualY / 2));         // before: /6 //<>//
+  mappedActualY = height * (1 - (actualY / 2));         // before: /6
 } 
 
 void initBallData() {
@@ -169,6 +180,7 @@ void initBallData() {
   pickupBall = false;
   ballPickedUp = false;
   pickupBallTime = 2;
+  tFromRelease = 0;
 }
 
 // TODO: scale?
@@ -318,18 +330,27 @@ void initSideRobot() {
 void initSideView() {
   sideStartZ = 570 - (hThrow * (height / 2));
   sideBallZ = sideStartZ;
+  print(sideBallZ);
   sideBallY = viewWidth;
   calcVertInitVelocity();
-  initSideRobot();
+  initSideRobot(); //<>//
 }
 
-void init () {
+void initStartDelayData() {
+  first = true; 
+  second = true; 
+  startDelayTime = 1000;  // 1s
+}
+
+void init() {
   predictLandingLocation();
   initBall ();
   initUser();
   initPIDdata();
   initRobot();
   initSideView();
+  initStartDelayData();
+  frameCount = 0;
 }
 
 void setup() {
@@ -370,7 +391,7 @@ void moveRobot() {
   robotX += robotMappedVx;
   robotY += robotMappedVy;
 }
-
+ //<>//
 void moveSideRobot() {
   robotSideY -= robotMappedVy;
 }
@@ -438,6 +459,13 @@ void timerFired() {
   }
 }
 
+void mousePressed() { //<>//
+  if (((mouseY<(buttonY+buttonHeight))&&(mouseY>(buttonY))) &&
+    ((mouseX<(buttonX +buttonWidth))&&(mouseX>buttonX))) {
+      init();
+  }
+}
+
 void drawLandings() {
    fill(0, 0, 255);
    circle(mappedX, mappedY, landingLocDiam); // predicted landing location
@@ -482,7 +510,6 @@ void drawSideView() {
   text("2m", width - 23, height-10);
    
   line(600,0, 600, 600);
-  
   if (!ballCaught) {
     image(tennis, sideBallY, sideBallZ);
   }
@@ -495,6 +522,18 @@ void drawSideView() {
   circle(robotSideY + 68, height-35, 15);
 }
 
+void drawBotton() {
+  int fillColor = 105;
+  if (((mouseY<(buttonY+buttonHeight))&&(mouseY>(buttonY))) &&
+    ((mouseX<(buttonX +buttonWidth))&&(mouseX>buttonX))) {
+    fillColor = 150;
+  }
+  fill(fillColor);
+  rect(buttonX, buttonY, buttonWidth, buttonHeight);
+  
+  fill(0); 
+  text("Reset", buttonX + 12, buttonY + 20);
+}
 
 void drawScreen () {
   drawSideView();
@@ -503,13 +542,15 @@ void drawScreen () {
   image(img, -200, -200);
   image(target, 1, -1); 
   image(aboveP, 150, height-50);
+  
+  drawBotton();
  
   drawLandings();
   
   textSize(25);
   fill(250, 250, 250);
   text(BirdPOV, 30, 50);
-
+ //<>//
   image(basket, robotX-38, robotY-38);  // robot
   
   if (!(ballCaught && ballPickedUp)) {
@@ -517,8 +558,19 @@ void drawScreen () {
   }
 }
 
+void startDelay() {
+  if (first) {
+    first = false;
+  }
+  else if (second) {
+    second = false;
+    delay(startDelayTime);
+  }
+}
+
 void draw(){ 
-  // default frame rate: 60 frames per second
+  // default frame rate: 60 frames per second 
   timerFired();
   drawScreen();
+  startDelay();
 }
