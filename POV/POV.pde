@@ -19,6 +19,8 @@ float actualX = -0.5;  // actual landing location coordinates (m)
 float actualY = 1.42;
 float actualT = 0.8; // actual time of flight (s)
 
+float computationTime = 0.3;
+
 float mappedActualT = actualT * fps;   // in frames
 
 float vy = 2.5;    // horizontal velocity in forward direction (m s^-1)       vx of AHRS
@@ -81,6 +83,8 @@ boolean dirChanged;
 int robotSteps;
 int robotReturnSteps;
 
+boolean move; // robot moves after computation time ellapsed
+
 float robotSideY;  
 
 float sideStartZ;
@@ -93,12 +97,12 @@ float tFromRelease;
 String BirdPOV = "Bird's Eye View";
 
 // PID
-float maxVoltage = 8;  // V
+float maxVoltage = 8;       // V
 float maxRobotSpeed = 2;    // m s^-1
 float motorError = 0.1;  
 float maxDutyCycle = 1;
 float minDutyCycle = 0.6;
-float vTarget = 2;     // m s^-1
+float vTarget = 2;          // m s^-1
 float Kp = 0.17;
 float Kd = 0.17;
 float Ki = 0.17;
@@ -200,6 +204,7 @@ void initRobotData() {
   dirChanged = false;
   robotSteps = 0;
   robotReturnSteps = 0;
+  move = false;
 }
 
 int getQuadrant () {
@@ -349,7 +354,11 @@ void timerFired() {
     moveSideBall();
   }
   
-  if (!isLocReached) {
+  if (frameCount >= (computationTime * fps)) {
+    move = true;
+  }
+  
+  if (move && (!isLocReached)) {
     robotSteps += 1;
     moveRobot();   // speed is updated in moveRobot(), the change also affects side view robot
     moveSideRobot();
@@ -360,10 +369,12 @@ void timerFired() {
     isBallCaught();
   }
    
+  // TODO: no need to add move??
   if ((!isLocReached) && (dist(robotX, robotY, mappedX, mappedY) < ((landingLocDiam / 16)  + (robotDiameter / 16)))) {
     isLocReached = true;
   }
-   
+  
+  // TODO: no need to add move??
   if (isLanded && isLocReached) {
     // robot goes back to start location
     if (!dirChanged) {
