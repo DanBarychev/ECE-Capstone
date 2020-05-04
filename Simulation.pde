@@ -472,7 +472,10 @@ void drawScreen () {
   float verticalDisplacement = altitude - hThrow;
   float ballSpeedZ = sqrt(sq(actualVz) - 2 * g * verticalDisplacement); // derived from equation of motion
   float ballSpeed = sqrt(sq(ballSpeedX) + sq(ballSpeedY)  + sq(ballSpeedZ));
-  String bSZ = str(round(actualVz*100)*.01);
+  String bSZ = str(round(actualVz*1000)*.001);
+  if (tFromRelease == t) {
+    bSZ = "0";
+  }
   drawSideView();
   //bird's view
   image(img, -200, -200);
@@ -496,9 +499,9 @@ void drawScreen () {
   text("Flight Time: " + str(round(tFromRelease*10)*.1) + "s", 450, 30);
   textSize(16);
   text("Ball Vtotal: " + str(round(ballSpeed*100)*.01) + "m/s", 25, 50);
-  text("Ball Vx: " + str(round(ballSpeedX*10000)*.0001) + "m/s", 25, 550);
-  text("Ball Vy: " +str(round(ballSpeedY*10000)*.0001) + "m/s", 25, 570);
-  text("Ball Vz: " + bSZ + "m/s", 25, 590);
+  text("Ball Vi x: " + str(round(ballSpeedX*10000)*.0001) + "m/s", 25, 550);
+  text("Ball Vi y: " +str(round(ballSpeedY*10000)*.0001) + "m/s", 25, 570);
+  text("Ball Vi z: " + bSZ + "m/s", 25, 590);
   drawLandings();
   
   textSize(21);
