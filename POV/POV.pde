@@ -16,7 +16,7 @@ int height = 600;
 
 int viewWidth = width / 2;
 
-float actualX = -0.5;  // actual landing location coordinates (m)
+float actualX = 0.5;  // actual landing location coordinates (m)
 float actualY = 1.42;
 float actualT = 0.8; // actual time of flight (s)
 
@@ -330,7 +330,6 @@ void initSideRobot() {
 void initSideView() {
   sideStartZ = 570 - (hThrow * (height / 2));
   sideBallZ = sideStartZ;
-  print(sideBallZ);
   sideBallY = viewWidth;
   calcVertInitVelocity();
   initSideRobot(); //<>//
@@ -460,9 +459,9 @@ void timerFired() {
 }
 
 void mousePressed() { //<>//
-  if (((mouseY<(buttonY+buttonHeight))&&(mouseY>(buttonY))) &&
-    ((mouseX<(buttonX +buttonWidth))&&(mouseX>buttonX))) {
-      init();
+  if (((mouseY < (buttonY + buttonHeight)) && (mouseY > buttonY)) &&
+     ((mouseX < (buttonX + buttonWidth)) && (mouseX > buttonX))) {
+    init();
   }
 }
 
@@ -493,15 +492,39 @@ void drawball () {
 } 
 
 void drawSideView() {
+  float altitude = (actualVz * tFromRelease - (g / 2) * pow(tFromRelease, 2)) + hThrow;
+  float verticalDisplacement = altitude - hThrow;
+  float ballSpeedX = ((ballMappedSpeedX  *  2) / viewWidth) * fps;
+  float ballSpeedY = ((ballMappedSpeedY  *  2) / 600.0) * fps;
+  float ballSpeedZ = sqrt(sq(actualVz) - 2 * g * verticalDisplacement); // derived from equation of motion
+  float ballSpeed = sqrt(sq(ballSpeedX) + sq(ballSpeedY)  + sq(ballSpeedZ));
+  
+  float roboSpeed = vActual;
+  
+  if (second || (pickupBall && (!returnStartPos)) || (isLocReached && !isLanded)) {
+    roboSpeed = 0;
+  } 
+  
   image(sky, viewWidth, 0); 
   sky.resize(viewWidth, height);
   image(img, viewWidth, 570);
   img.resize((ceil((4 / 3.0) * viewWidth)), ceil((4/3.0) * height));
   image(manSide, 320, 90);
   
+  fill(200,200,200);
+  textSize(21);
+  
   fill(255,255,255);
-  text("Side View", 630, 50);
-  textSize(16);
+  text("Side View", 620, 30);   //changed from 50 to 30 and 630 to 620
+  textSize(17);    //from 16 to 16
+  text("Flight Time:     " + str(round(tFromRelease*10)*.1) + "s", 1000, 30);
+  text("Altitude:         " + nfs(altitude, 0, 1) + "m", 1000, 50);
+  text("Ball Speed:     " + nfs(ballSpeed, 0, 2) + "m/s", 1000, 70);
+  text("Ball Vx:           " + nfs(ballSpeedX, 0, 2) + "m/s", 1000, 100);
+  text("Ball Vy:           " + nfs(ballSpeedY, 0, 2) + "m/s", 1000, 120);
+  text("Ball Vz:           " + nfs(ballSpeedZ, 0, 2) + "m/s", 1000, 140);
+  text("Robot Speed:  " + nfs(roboSpeed, 0, 2) + "m/s", 1000, 170);
+  
   fill(50,50,50);
   text("H: 1.0m", 601, 300);
   fill(255,255,255);
@@ -513,7 +536,6 @@ void drawSideView() {
   if (!ballCaught) {
     image(tennis, sideBallY, sideBallZ);
   }
-  
   //robot and wheels
   image(basketSide, robotSideY, 520);
   fill(70,70,70);
@@ -524,8 +546,8 @@ void drawSideView() {
 
 void drawBotton() {
   int fillColor = 105;
-  if (((mouseY<(buttonY+buttonHeight))&&(mouseY>(buttonY))) &&
-    ((mouseX<(buttonX +buttonWidth))&&(mouseX>buttonX))) {
+  if (((mouseY < (buttonY + buttonHeight)) && (mouseY > buttonY)) &&
+     ((mouseX < (buttonX + buttonWidth)) && (mouseX > buttonX))) {
     fillColor = 150;
   }
   fill(fillColor);
@@ -543,13 +565,30 @@ void drawScreen () {
   image(target, 1, -1); 
   image(aboveP, 150, height-50);
   
+  //forward markers
+  textSize(15);
+  fill(240,240,240);
+  //forward markers
+  text("0 m", 287, height - 24);
+  text(".5 m", 287, height - 163);
+  text("1 m", 287, 306);
+  text("1.5 m", 282, 178);
+  text("2 m", 287, 36);
+  
+  //side markers
+  fill(255,255,255);
+  text("+.5 m", 415, 306);
+  text("-.5 m", 160, 306);
+  text("+1 m", 550, 306);
+  text("-1 m", 20, 306);
+
   drawBotton();
  
   drawLandings();
   
-  textSize(25);
+  textSize(21);
   fill(250, 250, 250);
-  text(BirdPOV, 30, 50);
+  text(BirdPOV, 20, 30);
  //<>//
   image(basket, robotX-38, robotY-38);  // robot
   
