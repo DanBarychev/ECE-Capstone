@@ -9,7 +9,7 @@ import math
 
 dt = 1/50 # Time Step between Filter Steps
 
-file = open('IMUCapture_Run7.txt', 'r') # IMU data file
+file = open('IMU_Data/IMUCapture_Run7.txt', 'r') # IMU data file
 
 Lines = file.readlines()
 
